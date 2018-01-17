@@ -64,7 +64,7 @@ classifiers = [
 setup(
     name='pydtk2',
     version=version,
-    description='Serial Python Wrapper for DTK2+PyMOAB',
+    description='Python Wrapper for Serial DTK2+PyMOAB',
     author='Qiao Chen',
     author_email='benechiao@gmail.com',
     keywords='Math',
