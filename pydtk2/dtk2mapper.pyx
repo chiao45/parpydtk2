@@ -10,7 +10,10 @@ cdef extern from 'DtkWrap.hpp' namespace 'pydtk2':
 
     cdef cppclass Dtk2MoabManager:
 
-        Dtk2MoabManager(moab.Interface *meshdb, unsigned long mesh_set) except +
+        Dtk2MoabManager(
+            moab.Interface *meshdb,
+            unsigned long mesh_set,
+            bool store_nodes) except +
 
         void register_tag(const std_string &tag) except +
         bool has_tag(const std_string &tag)
@@ -45,10 +48,11 @@ cdef class DTK2MoabManager:
 
     cdef Dtk2MoabManager *_inst
 
-    def __cinit__(self, Core meshdb, mesh_set=0):
+    def __cinit__(self, Core meshdb, mesh_set=0, store_nodes=False):
         """Constructor"""
         cdef unsigned int mset = <unsigned int> mesh_set
-        self._inst = new Dtk2MoabManager(<moab.Interface *> meshdb.inst, mset)
+        self._inst = new Dtk2MoabManager(
+            <moab.Interface *> meshdb.inst, mset, <bool> store_nodes)
 
     def __del__(self):
         """Destructor"""

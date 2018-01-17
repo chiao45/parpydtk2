@@ -56,7 +56,8 @@ public:
   Dtk2MoabManager() = delete;
 
   // real constructors
-  Dtk2MoabManager(::moab::Interface *meshdb, unsigned long mesh_set = 0)
+  Dtk2MoabManager(::moab::Interface *meshdb, unsigned long mesh_set = 0,
+                  bool store_nodes = false)
       : _meshdb(meshdb) {
     ::moab::ErrorCode err;
 
@@ -89,6 +90,12 @@ public:
 
     // reserve spaces for vector fuctions, and operators
     _v_pool.reserve(20);
+
+    // check reserve nodes or not
+    if (!store_nodes) {
+      _nodes.clear();
+      _nodes.shrink_to_fit();
+    }
   }
 
   // register field associated with tag in moab by passing in the string value
@@ -192,6 +199,11 @@ public:
   void set_spacial_dimension(int dim) {
     auto &sub_list = _options->sublist("Point Cloud", true);
     sub_list.set("Spatial Dimension", dim);
+    ::moab::ErrorCode err;
+    err = _source->_pmeshdb->get_moab()->set_dimension(dim);
+    MB_CHK_ERR(err);
+    err = _target->_pmeshdb->get_moab()->set_dimension(dim);
+    MB_CHK_ERR(err);
   }
 
   void set_order(int order) {
@@ -271,5 +283,13 @@ std::string Dtk2Mapper::_get_basis_from_id(int basis) {
 }
 
 } // namespace pydtk2
+
+#undef MB_CHK_ERR
+#define MB_CHK_ERR(err_code)                                                   \
+  do {                                                                         \
+    if (moab::MB_SUCCESS != err_code)                                          \
+      return moab::MBError(__LINE__, __func__, __FILENAME__, __MBSDIR__,       \
+                           err_code, "", moab::MB_ERROR_TYPE_EXISTING);        \
+  } while (false)
 
 #endif

@@ -1,4 +1,4 @@
-# Serial DTK2 with MOAB
+# Serial DTK2 with MOAB for Python
 
 ## Introduction
 
@@ -6,13 +6,13 @@ This is a python interface of DataTransferKit-2.0 with MOAB mesh database for mu
 
 ## Limitations
 
-Only serial solution transfers are supported. Also, we only wrap moving least square method with radial basis functions method.
+Only serial solution transfers are supported. Also, we only wrap moving least square method with radial basis functions.
 
 ## Installation and Requirements
 
 This software is developed and tested with (and only with) this [docker image](https://github.com/unifem/coupler-desktop) environment.
 
-Currently, this software has the following Requirements for installation:
+Currently, this software has the following requirements for installation:
 
 * A complete DataTransferKit-2.0 installation
 
@@ -30,15 +30,7 @@ Here are optional requirements:
 
 * mpi4py, see known issues (below)
 
-Installation processes (make system):
-
-* ```make```, build in-place
-
-* ```[sudo] make install```, system-wise installation
-
-* ```make clean_cython```, clean the cython-generated C++ source file
-
-* ```make regen_cython```, regenerate C++ source file with Cython
+Installation processes: ```[sudo] env CC=mpicxx python3 setup.py install```
 
 ## Jupyter Notebooks
 
@@ -46,7 +38,7 @@ This software comes with several jupyter notebooks as tutorials. Inside ```./not
 
 ## Known Issue(s)
 
-**NOTE, openmpi may have issues with this software, in order to work correctly, you may need to explicit do ```from mpi4py import MPI``` in your python scripts.**
+**NOTE, openmpi may have issues with this software, in order to work correctly, you may need to explicitly do ```from mpi4py import MPI``` in your python scripts.**
 
 ## License
 
