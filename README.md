@@ -42,7 +42,7 @@ This software comes with several jupyter notebooks as tutorials. Inside ```./not
 
 ## License
 
-...
+MIT License, Copyright (c) 2018 Qiao Chen
 
 ## Contact
 
