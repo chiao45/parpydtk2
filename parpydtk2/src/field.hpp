@@ -72,7 +72,7 @@ public:
   /// \brief extract values
   /// \param[in] ranges entity ranges, for this work, it should be vertices
   /// \param[out] values data values, for vector/tensor, C order is expected
-  inline void extract(const ::moab::Range &range, double *values) {
+  inline void extract(const ::moab::Range &range, double *values) const {
     moab::ErrorCode ret =
         mdb_.tag_get_data(tag_, range, reinterpret_cast<void *>(values));
     handle_moab_error(ret);
