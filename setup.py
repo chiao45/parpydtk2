@@ -28,6 +28,7 @@ _libs = [
     'teuchoscore',
     'dtk_operators',
     'stdc++',
+    'mpi',
 ]
 
 _lib_dirs = [
@@ -63,6 +64,30 @@ classifiers = [
     'Operating System :: Linux',
     'Intended Audience :: Science/Research',
 ]
+
+
+def config_mpi():
+    import subprocess
+    prog = subprocess.Popen(['mpicxx', '-showme'], stdout=subprocess.PIPE)
+    while prog.poll() is None:
+        continue
+    assert prog.poll() == 0
+    output = prog.stdout.readline().decode('UTF-8')  # already in py3
+    outputs = output.split(' ')
+    inc = []
+    lib = []
+    for arg in outputs:
+        if arg.startswith('-I'):
+            inc.append(arg[2:])
+        elif arg.startswith('-L'):
+            lib.append(arg[2:])
+    return (inc, lib)
+
+
+_mpi_conf = config_mpi()
+_inc_dirs += _mpi_conf[0]
+_lib_dirs += _mpi_conf[1]
+
 
 setup(
     name='parpydtk2',
