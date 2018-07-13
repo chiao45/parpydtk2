@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+
+import subprocess
+
+
+def get_cython():
+    _cy = None
+    try:
+        subprocess.check_call(['cython', '-V'])
+        _cy = 'cython'
+    except:
+        try:
+            subprocess.check_call(['cython3', '-V'])
+            _cy = 'cython3'
+        except:
+            raise
+    return _cy
+
+
+def main():
+    import sys
+    import mpi4py
+    cy = get_cython()
+    subprocess.call([cy, '-I' + mpi4py.get_include(), '--cplus',
+                     'parpydtk2/mapper.pyx'] + sys.argv[1:])
+
+
+if __name__ == '__main__':
+    main()

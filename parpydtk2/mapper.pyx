@@ -4,14 +4,13 @@
 """DTK2 mapper interface with MOAB"""
 
 # cimports
-cimport numpy as np
+cimport numpy as cnp
 from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 from libcpp.string cimport string as std_string
 from mpi4py cimport MPI
 
 # normal imports
-import sys
 import numpy as np
 import mpi4py
 mpi4py.rc.initialize = False
@@ -21,10 +20,15 @@ import datetime
 from ._version import __version__
 
 
+__version__ = __version__
+__author__ = 'Qiao Chen'
+__copyright__ = 'Copyright 2018, Qiao Chen'
+
+
 cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
 
 
-    cdef cppclass _IMeshDB 'IMeshDB':
+    cdef cppclass _IMeshDB 'parpydtk2::IMeshDB':
         void begin_create() except +
         void create_vset() except +
         void create_vertices(int nv, const double *coords, unsigned set_id) except +
@@ -32,7 +36,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
         void finish_create(bool trivial_gid) except +
         int size(unsigned set_id) except +
         int sets()
-        void create_field(const std_string &field_name, unsigned set_id set, int dim) except +
+        void create_field(const std_string &field_name, unsigned set_id, int dim) except +
         bool has_field(const std_string &field_name)
         int field_dim(const std_string &field_name) except +
         int field_set_id(const std_string &field_name) except +
@@ -42,24 +46,8 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
             unsigned set_id) except +
 
 
-    cdef enum Methods:
-        MMLS = 0
-        SPLINE
-        N2N
-
-
-    cdef enum BasisFunctions:
-        WENDLAND2 = 0
-        WENDLAND4
-        WENDLAND6
-        WU2
-        WU4
-        WU6
-        BUHMANN3
-
-
-    cdef cppclass _Mapper 'Mapper':
-        Mapper(MPI.MPI_Comm comm, const std_string &version,
+    cdef cppclass _Mapper 'parpydtk2::Mapper':
+        _Mapper(MPI.MPI_Comm comm, const std_string &version,
             const std_string &date, bool profiling) except +
         int ranks()
         int rank()
@@ -70,25 +58,13 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
         void begin_initialization() except +
         void register_coupling_fields(const std_string &bf,
             const std_string &gf, bool direct) except +
+        bool has_coupling_fields(const std_string &bf,
+            const std_string &gf, bool direct)
         void end_initialization() except +
         void begin_transfer()
-        void tranfer_data(const std_string &bf,
+        void transfer_data(const std_string &bf,
             const std_string &gf, bool direct) except +
         void end_transfer()
-
-
-MMLS = Methods.MMLS
-SPLINE = Methods.SPLINE
-N2N = Methods.N2N
-
-
-WENDLAND2 = BasisFunctions.WENDLAND2
-WENDLAND4 = BasisFunctions.WENDLAND4
-WENDLAND6 = BasisFunctions.WENDLAND6
-WU2 = BasisFunctions.WU2
-WU4 = BasisFunctions.WU4
-WU6 = BasisFunctions.WU6
-BUHMANN3 = BasisFunctions.BUHMANN3
 
 
 cdef class IMeshDB:
@@ -114,14 +90,7 @@ cdef class IMeshDB:
         --------
         :func:`finish_create` : finish creating mesh
         """
-        try:
-            self.mdb.begin_create()
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to create mesh: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.begin_create()
 
     def create_vset(self):
         """Create a new vertex set
@@ -132,14 +101,7 @@ cdef class IMeshDB:
         --------
         :func:`create_vertices` : create vertices
         """
-        try:
-            self.mdb.create_vset()
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to create vset: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.create_vset()
 
     def create_vertices(self, double[:, ::1] coords, unsigned set_id=0):
         """Create a set of coordinates
@@ -157,18 +119,11 @@ cdef class IMeshDB:
         :func:`assign_gids` : assign global IDs
         """
         assert coords.shape[1] == 3
-        try:
-            self.mdb.create_vertices(
-                <int> coords.shape[0],
-                <const double *> &coords[0],
-                set_id
-            )
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to create vertices: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.create_vertices(
+            <int> coords.shape[0],
+            <const double *> &coords[0, 0],
+            set_id
+        )
 
     def assign_gids(self, int[::1] gids, unsigned set_id=0):
         """Assign global IDs
@@ -186,18 +141,11 @@ cdef class IMeshDB:
         --------
         :func:`create_vertices` : create vertices
         """
-        try:
-            self.mdb.create_gids(
-                <int> gids.size,
-                <const int *> &coords[0],
-                set_id
-            )
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to create gids: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.assign_gids(
+            <int> gids.size,
+            <const int *> &gids[0],
+            set_id
+        )
 
     def finish_create(self, trivial_gid=True):
         """finish mesh creation
@@ -210,14 +158,7 @@ cdef class IMeshDB:
             `True` if we use MOAB trivial global ID computation
         """
         cdef bool tg = <bool> 1 if trivial_gid else <bool> 0
-        try:
-            self.mdb.finished(tg)
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to finish create: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.finish_create(tg)
 
     def size(self, unsigned set_id=0):
         """Get the size of a set
@@ -236,14 +177,7 @@ cdef class IMeshDB:
         --------
         :func:`sets` : get the number of sets
         """
-        try:
-            return self.mdb.size(set_id)
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to get size: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        return self.mdb.size(set_id)
 
     def sets(self):
         """Get the nunber of sets
@@ -268,14 +202,7 @@ cdef class IMeshDB:
             dimension of the field, i.e. scalar, vector, tensor
         """
         cdef std_string fn = <std_string> field_name.encode('UTF-8')
-        try:
-            self.mdb.create_field(fn, set_id, dim)
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to create field: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mdb.create_field(fn, set_id, dim)
 
     def has_field(self, str field_name):
         """Check if a field exists
@@ -293,6 +220,102 @@ cdef class IMeshDB:
         cdef std_string fn = <std_string> field_name.encode('UTF-8')
         return self.mdb.has_field(fn)
 
+    def field_dim(self, str field_name):
+        """Check the field data dimension
+
+        Parameters
+        ----------
+        field_name : str
+            name of the field
+
+        Returns
+        -------
+        int
+            data field dimension of `field_name`
+        """
+        cdef std_string fn = <std_string> field_name.encode('UTF-8')
+        return self.mdb.field_dim(fn)
+
+    def field_set_id(self, str field_name):
+        """Check the field set id
+
+        Parameters
+        ----------
+        field_name : str
+            name of the field
+
+        Returns
+        -------
+        int
+            data field set id of `field_name`
+        """
+        cdef std_string fn = <std_string> field_name.encode('UTF-8')
+        return self.mdb.field_set_id(fn)
+
+    def assign_field(self, str field_name, cnp.ndarray values not None,
+        unsigned set_id=0):
+        """Assign values to a field
+
+        .. note:: `values` size must be at least size*dim
+
+        Parameters
+        ----------
+        field_name : str
+            name of the field
+        values : np.ndarray
+            input source values
+        set_id : int
+            set index, default is root set
+
+        See Also
+        --------
+        :func:`extract_field` : extract value from a field
+        :func:`size` : check the size of a mesh set
+        :func:`dim` : get the dimension
+        """
+        cdef:
+            std_string fn = <std_string> field_name.encode('UTF-8')
+            int n = self.mdb.size(set_id) * self.mdb.field_dim(fn)
+        assert values.size >= n
+        self.mdb.assign_field(fn, <const double *> values.data, set_id)
+
+    def extract_field(self, str field_name, unsigned set_id=0,
+        double[::1] buffer=None, reshape=False):
+        """Extact the values from a field
+
+        .. warning:: if `buffer` is passed in, it must be 1D
+
+        Parameters
+        ----------
+        field_name : str
+            name of the field
+        set_id : int
+            set index, default is root set
+        buffer : np.ndarray
+            1D buffer
+        reshape : bool
+            `True` if we reshape the output, only for vectors/tensors
+
+        Returns
+        -------
+        np.ndarray
+            field data values
+        """
+        cdef:
+            std_string fn = <std_string> field_name.encode('UTF-8')
+            int n = self.mdb.size(set_id)
+            int dim = self.mdb.field_dim(fn)
+            cnp.ndarray[double, ndim=1] values
+        if buffer is not None:
+            assert len(buffer) >= n * dim
+            values = np.asarray(buffer)
+        else:
+            values = np.empty(n * dim, dtype='double')
+        self.mdb.extract_field(fn, <double *> values.data, set_id)
+        if reshape and dim > 1:
+            return values.reshape((n, dim))
+        return values
+
 
 cdef class Mapper:
     cdef _Mapper *mp
@@ -301,20 +324,14 @@ cdef class Mapper:
     def __init__(self, comm=MPI.COMM_WORLD, profiling=True):
         pass
 
-    def __cinit__(self, MPI.MPI_Comm comm=MPI.COMM_WORLD, profiling=True):
+    def __cinit__(self, MPI.Comm comm=MPI.COMM_WORLD, profiling=True):
         cdef:
             std_string version = __version__.decode('UTF-8')
             std_string date = \
                 datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').decode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
-        try:
-            self.mp = new _Mapper(comm, version, date, prof)
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to constructor mapper: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+            cdef MPI.MPI_Comm comm_ = <MPI.MPI_Comm> comm.ob_mpi
+        self.mp = new _Mapper(comm_, version, date, prof)
 
     def __dealloc__(self):
         del self.mp
@@ -351,22 +368,14 @@ cdef class Mapper:
         MPI.Comm
             MPI communicator
         """
-        cdef MPI.MPI_Comm comm = self.mp.comm()
-        return comm
+        return <MPI.Comm> self.mp.comm()
 
     def set_dimension(self, int dim):
         """Set the spacial dimension
 
         .. note:: the default value is 3
         """
-        try:
-            self.mp.set_dimension(dim)
-        except Exception as e:
-            if MPI.Is_initialized():
-                print('fail to set dimension: %s' % e, file=sys.stderr)
-                MPI.COMM_WORLD.Abort()
-            else:
-                raise
+        self.mp.set_dimension(dim)
 
     @property
     def blue_mesh(self):
@@ -383,7 +392,7 @@ cdef class Mapper:
         --------
         :attr:`green_mesh` : get the green mesh
         """
-        cdef IMeshDB mdb
+        cdef IMeshDB mdb = IMeshDB()
         mdb.mdb = <_IMeshDB *> &self.mp.blue_mesh()
         return mdb
 
@@ -402,9 +411,115 @@ cdef class Mapper:
         --------
         :attr:`blue_mesh` : get the blue mesh
         """
-        cdef IMeshDB mdb
+        cdef IMeshDB mdb = IMeshDB()
         mdb.mdb = <_IMeshDB *> &self.mp.green_mesh()
         return mdb
 
     def begin_initialization(self):
-        pass
+        """Initialization starter
+
+        This is a must-call function in order to indicate mapper that you are
+        about to initialize/register coupling fields
+
+        See Also
+        --------
+        :func:`register_coupling_fields` : register coupled fields
+        :func:`end_initialization` : finish initialization
+        """
+        self.mp.begin_initialization()
+
+    def register_coupling_fields(self, str bf, str gf, bool direct):
+        """register a coupled fields
+
+        .. note:: we use boolean to indicate direction
+
+        Parameters
+        ----------
+        bf : str
+            blue mesh field name
+        gf : str
+            green mesh field name
+        direct : bool
+            `True` for blue->green, `False` for the opposite
+
+        See Also
+        --------
+        :func:`transfer_data` : transfer a coupled data fields
+        """
+        cdef:
+            std_string bf_ = <std_string> bf.encode('UTF-8')
+            std_string gf_ = <std_string> gf.encode('UTF-8')
+            bool dr = <bool> 1 if direct else <bool> 0
+        self.mp.register_coupling_fields(bf_, gf_, dr)
+
+    def has_coupling_fields(self, str bf, str gf, bool direct):
+        """Check if a coupled fields exists
+
+        Returns
+        -------
+        bool
+            `True` if (bf,gf) exists in `direct`ion
+        """
+        cdef:
+            std_string bf_ = <std_string> bf.encode('UTF-8')
+            std_string gf_ = <std_string> gf.encode('UTF-8')
+            bool dr = <bool> 1 if direct else <bool> 0
+        return self.mp.has_coupling_fields(bf_, gf_, dr)
+
+    def end_initialization(self):
+        """Initialization closer
+
+        This is a must-call function in order to tell the mapper we are ready
+
+        See Also
+        --------
+        :func:`begin_initialization` : initialization starter
+        """
+        self.mp.end_initialization()
+
+    def begin_transfer(self):
+        """Transfer starter
+
+        This is a must-call function to inidate the beginning of a transferring
+        block
+
+        See Also
+        --------
+        :func:`end_transfer` : transfer closer
+        :func:`tranfer_data` : transfer a coupled data fields
+        """
+        self.mp.begin_transfer()
+
+    def transfer_data(self, str bf, str gf, bool direct):
+        """Transfer (bf, gf) in `direct`ion
+
+        Parameters
+        ----------
+        bf : str
+            blue mesh field name
+        gf : str
+            green mesh field name
+        direct : bool
+            `True` for blue->green, `False` for the opposite
+
+        See Also
+        --------
+        :func:`register_coupling_fields` : register coupled fields
+        """
+        cdef:
+            std_string bf_ = <std_string> bf.encode('UTF-8')
+            std_string gf_ = <std_string> gf.encode('UTF-8')
+            bool dr = <bool> 1 if direct else <bool> 0
+        self.mp.transfer_data(bf_, gf_, dr)
+
+    def end_transfer(self):
+        """Transfer closer
+
+        This is a must-call function to indicate we have finished a sequence of
+        transferring requests
+
+        See Also
+        --------
+        :func:`begin_transfer` : transfer starter
+        """
+        self.mp.end_transfer()

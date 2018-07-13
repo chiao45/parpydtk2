@@ -222,6 +222,16 @@ public:
     timer_ += MPI_Wtime() - t;
   }
 
+  /// \brief check if a coupling data fields exists
+  /// \param[in] bf blue meshdb field data
+  /// \param[in] gf green meshdb field data
+  /// \param[in] direct \a true for b->g, \a false for g->b
+  inline bool has_coupling_fields(const std::string &bf, const std::string &gf,
+                                  bool direct) {
+    return operators_[direct].find(std::make_pair(bf, gf)) !=
+           operators_[direct].end();
+  }
+
   /// \brief end initialization
   inline void end_initialization() {
     throw_error_if(!ready_, "the ready tag was not triggerred, did you forget "
@@ -282,12 +292,12 @@ public:
   /// \brief begin to transfer data
   inline void begin_transfer() noexcept { timer_ = 0.0; }
 
-  /// \brief tranfser data
+  /// \brief transfser data
   /// \param[in] bf blue meshdb field data
   /// \param[in] gf green meshdb field data
   /// \param[in] direct \a true for b->g, \a false for g->b
-  inline void tranfer_data(const std::string &bf, const std::string &gf,
-                           bool direct) {
+  inline void transfer_data(const std::string &bf, const std::string &gf,
+                            bool direct) {
     const auto key     = std::make_pair(bf, gf);
     auto       op_iter = operators_[direct].find(key);
     throw_error_if(op_iter == operators_[direct].end(),
