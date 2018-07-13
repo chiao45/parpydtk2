@@ -9,7 +9,7 @@ def _excepthook(exctype, value, traceback):
     mpi4py.rc.initialize = False
     mpi4py.rc.finalize = False
     from mpi4py import MPI
-    if MPI.Is_initialized():
+    if MPI.Is_initialized() and MPI.COMM_WORLD.size > 1:
         MPI.COMM_WORLD.Abort(1)
 
 
