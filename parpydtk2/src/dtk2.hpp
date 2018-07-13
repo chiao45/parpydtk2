@@ -25,4 +25,364 @@
 
 #pragma once
 
+#include <set>
+#include <map>
+#include <algorithm>
+
 #include "imeshdb.hpp"
+
+// trilinos
+#include <DTK_MapOperatorFactory.hpp>
+#include <Teuchos_ParameterList.hpp>
+#include <DTK_FunctionSpace.hpp>
+
+// helper macro
+#define FOR_DIR(__i) for (int __i = 0; i < 2; ++i)
+
+namespace parpydtk2 {
+
+/// \enum Methods
+/// \brief available methods
+enum Methods {
+  MMLS = 0, ///< modified moving least square, default
+  SPLINE,   ///< spline interpolation
+  N2N       ///< node 2 node projection
+};
+
+/// \enum BasisFunctions
+/// \brief radial basis function weights for MMLS and SPLINE
+enum BasisFunctions {
+  WENDLAND2 = 0, ///< Wendland 2nd order
+  WENDLAND4,     ///< Wendland 4th order
+  WENDLAND6,     ///< Wendland 6th order
+  WU2,           ///< Wu 2nd order
+  WU4,           ///< Wu 4th order
+  WU6,           ///< Wu 6th order
+  BUHMANN3       ///< Buhmann 3or order
+};
+
+/// \class Mapper
+/// \brief the mapper interface for interface solution transfer
+class Mapper {
+  /// \brief initialize parameter list
+  inline void init_parlist_() {
+    FOR_DIR(i) {
+      opts_[i].reset(new ::Teuchos::ParameterList());
+      auto &list = *opts_[i];
+      list.set("Map Type", "Point Cloud");
+      auto &sub_list = list.sublist("Point Cloud", false);
+      sub_list.set("Map Type", "Moving Least Square Reconstruction");
+      sub_list.set("Spatial Dimension", dim_);
+      sub_list.set("Basis Type", "Wendland");
+      sub_list.set("Basis Order", 4);
+      sub_list.set("Type of Search", "Radius");
+      sub_list.set("RBF Radius", 0.0);
+      sub_list.set("Num Neighbors", 0);
+      sub_list.set("Matching Nodes", false);
+
+      auto &sub_list_search = list.sublist("Search", false);
+      sub_list_search.set("Track Missed Range Entities", true);
+    }
+  }
+
+  /// \brief parse and formatting a parameter list
+  /// \param[in] list parameter list
+  inline static std::string parse_list_(::Teuchos::ParameterList &list) {
+    using std::string;
+    auto &             sub_list = list.sublist("Point Cloud", true);
+    const bool         rs = sub_list.get<string>("Type of Search") == "Radius";
+    std::ostringstream ss;
+    ss << string(' ', 15) << "map type: " << sub_list.get<string>("Map Type")
+       << '\n'
+       << string(' ', 15)
+       << "spatial dimension: " << sub_list.get<int>("Spatial Dimension")
+       << '\n'
+       << string(' ', 15)
+       << "basis type: " << sub_list.get<string>("Basis Type") << '\n'
+       << string(' ', 15) << "basis order: " << sub_list.get<int>("Basis Order")
+       << '\n'
+       << string(' ', 15)
+       << "type of search: " << sub_list.get<string>("Type of Search") << '\n'
+       << string(' ', 15) << (rs ? "radius: " : "knn: ")
+       << (rs ? sub_list.get<double>("RBF Radius")
+              : sub_list.get<int>("Num Neighbors"))
+       << '\n';
+    return ss.str();
+  }
+
+public:
+  /// \brief constructor
+  /// \param[in] comm communicator
+  /// \param[in] version passed from Python inteface
+  /// \param[in] date passed from Python interface
+  /// \param[in] profiling whether do simple profiling, i.e. wtime
+  explicit Mapper(MPI_Comm           comm    = MPI_COMM_WORLD,
+                  const std::string &version = "", const std::string &date = "",
+                  bool profiling = true)
+      : comm_(comm), B_(comm), G_(comm), dim_(3), ready_(false),
+        profiling_(profiling), timer_(0.0) {
+    using std::string;
+    // NOTE pass in time should have "%b %d %Y %H:%M:%S" format
+    streamer_master(B_.rank())
+        << '\n'
+        << string('-', 100) << "\n\n"
+        << string(' ', 15) << "parpydtk2 version: " << '\n'
+        << string(' ', 15) << "mapper created time: " << date << '\n'
+        << string(' ', 15) << "binary built time: " << __DATE__ << ' '
+        << __TIME__ << '\n'
+        << string(' ', 15) << "total processes: " << B_.ranks() << "\n\n"
+        << string('-', 100) << '\n';
+
+    // init par lists
+    init_parlist_();
+  }
+
+  virtual ~Mapper() = default;
+
+  /// \name mapper_py_interface
+  ///@{
+
+  /// \brief get the ranks
+  inline int ranks() const noexcept { return B_.ranks(); }
+
+  /// \brief get my rank
+  inline int rank() const noexcept { return B_.rank(); }
+
+  /// \brief get the communicator
+  inline MPI_Comm comm() const noexcept { return comm_; }
+
+  /// \brief set dimension
+  /// \param[in] dim geometry dimension
+  inline void set_dimension(int dim) {
+    B_.set_dimension(dim);
+    G_.set_dimension(dim);
+    dim_ = dim;
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Spatial Dimension", dim_);
+  }
+
+  /// \brief get blue mesh
+  inline IMeshDB &blue_mesh() noexcept { return B_; }
+
+  /// \brief get green mesh
+  inline IMeshDB &green_mesh() noexcept { return G_; }
+
+  /// \brief begin initialization
+  inline void begin_initialization() {
+    using std::string;
+    throw_error_if(ready_, "this mapper has already been initialized");
+    throw_error_if(!B_.ready() || !G_.ready(),
+                   "at least one of the meshes is not ready");
+    // parse parameter list
+    string info[2];
+    FOR_DIR(i)
+    info[i] = parse_list_(*opts_[i]);
+    streamer_master(B_.rank()) << '\n'
+                               << string('-', 100) << "\n\n"
+                               << string(' ', 15) << "blue ===> green:\n"
+                               << info[0] << '\n'
+                               << "green ===> blue:\n"
+                               << info[1] << '\n'
+                               << string('-', 100) << '\n';
+    ready_ = true; // trigger flag here
+    timer_ = 0.0;
+  }
+
+  /// \brief register coupling fields
+  /// \param[in] bf blue meshdb field data
+  /// \param[in] gf green meshdb field data
+  /// \param[in] direct \a true for b->g, \a false for g->b
+  inline void register_coupling_fields(const std::string &bf,
+                                       const std::string &gf, bool direct) {
+    throw_error_if(B_.field_dim(bf) != G_.field_dim(gf),
+                   "field dimensions don\'t match");
+    auto &b_dtk_fields = B_.dtk_fields();
+    auto &g_dtk_fields = G_.dtk_fields();
+    auto &src          = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
+    auto &tgt          = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
+    auto &optr         = operators_[direct];
+    auto  build        = optr.insert(
+        std::make_pair(std::make_pair(bf, gf),
+                       factory_.create(src.second->getMap(),
+                                       tgt.second->getMap(), *opts_[direct])));
+    if (!build.second) {
+      show_warning(bf + "+" + gf + " already exists, ignoring request");
+      return;
+    }
+
+    auto &op        = build.first->second;
+    auto &src_mngrs = direct ? B_.mangers() : G_.mangers();
+    auto &tgt_mngrs = direct ? G_.mangers() : B_.mangers();
+    auto &src_mngr  = src_mngrs[src.first];
+    auto &tgt_mngr  = tgt_mngrs[tgt.first];
+
+    // actually build the operator
+    double t = MPI_Wtime();
+    op->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
+    timer_ += MPI_Wtime() - t;
+  }
+
+  /// \brief end initialization
+  inline void end_initialization() {
+    throw_error_if(!ready_, "the ready tag was not triggerred, did you forget "
+                            "call begin_initialization?");
+    double avg, min_, max_;
+    if (profiling_ && ranks() > 1) {
+      // gather all time information
+      std::vector<double> ts(ranks());
+      ts[0]   = timer_;
+      int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
+                           comm_);
+      if (ret != MPI_SUCCESS) {
+        // NOTE that the default handler in mpi will directly abort, as a mapper
+        // we will not modify the mpi handler (this should be the task of
+        // application codes)
+        char msg[MPI_MAX_ERROR_STRING];
+        int  dummy, err_cls;
+        MPI_Error_string(ret, msg, &dummy);
+        MPI_Error_class(ret, &err_cls);
+        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                  << ", error_class: " << err_cls << ", msg: " << msg
+                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                  << __FILE__ << "():" << __LINE__ << '\n';
+        MPI_Abort(MPI_COMM_WORLD, ret);
+      }
+
+      // compute timing data
+      auto minmax = std::minmax_element(ts.cbegin(), ts.cend());
+      min_        = *minmax.first;
+      max_        = *minmax.second;
+      avg         = std::accumulate(ts.cbegin(), ts.cend(), 0.0) / ranks();
+    } else if (profiling_)
+      avg = min_ = max_ = timer_;
+
+    // streaming messages
+    using std::string;
+
+    streamer_master(rank())
+        << string('-', 100) << "\n\n"
+        << string(' ', 15) << "total registered coupling fields: "
+        << operators_[0].size() + operators_[1].size() << '\n'
+        << string(' ', 15) << "blue ===> green:\n";
+    for (const auto &op : operators_[0])
+      streamer_master(rank()) << string(' ', 20) << op.first.first << ':'
+                              << op.first.second << '\n';
+    streamer_master(rank()) << string(' ', 15) << "green ===> blue:\n";
+    for (const auto &op : operators_[1])
+      streamer_master(rank()) << string(' ', 20) << op.first.second << ':'
+                              << op.first.first << '\n';
+    if (profiling_)
+      streamer_master(rank())
+          << string(' ', 15) << "time used: " << std::scientific << "min "
+          << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
+          << '\n';
+    streamer_master(rank()) << '\n' << string('-', 100) << '\n';
+  }
+
+  /// \brief begin to transfer data
+  inline void begin_transfer() noexcept { timer_ = 0.0; }
+
+  /// \brief tranfser data
+  /// \param[in] bf blue meshdb field data
+  /// \param[in] gf green meshdb field data
+  /// \param[in] direct \a true for b->g, \a false for g->b
+  inline void tranfer_data(const std::string &bf, const std::string &gf,
+                           bool direct) {
+    const auto key     = std::make_pair(bf, gf);
+    auto       op_iter = operators_[direct].find(key);
+    throw_error_if(op_iter == operators_[direct].end(),
+                   "no such operator exist");
+    auto & b_dtk_fields = B_.dtk_fields();
+    auto & g_dtk_fields = G_.dtk_fields();
+    auto & src          = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
+    auto & tgt          = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
+    double t            = MPI_Wtime();
+    op_iter->second->apply(*src.second, *tgt.second);
+    timer_ += MPI_Wtime() - t;
+  }
+
+  /// \brief end transfer
+  inline void end_transfer() {
+    double avg, min_, max_;
+    if (profiling_ && ranks() > 1) {
+      // gather all time information
+      std::vector<double> ts(ranks());
+      ts[0]   = timer_;
+      int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
+                           comm_);
+      if (ret != MPI_SUCCESS) {
+        // NOTE that the default handler in mpi will directly abort, as a mapper
+        // we will not modify the mpi handler (this should be the task of
+        // application codes)
+        char msg[MPI_MAX_ERROR_STRING];
+        int  dummy, err_cls;
+        MPI_Error_string(ret, msg, &dummy);
+        MPI_Error_class(ret, &err_cls);
+        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                  << ", error_class: " << err_cls << ", msg: " << msg
+                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                  << __FILE__ << "():" << __LINE__ << '\n';
+        MPI_Abort(MPI_COMM_WORLD, ret);
+      }
+
+      // compute timing data
+      auto minmax = std::minmax_element(ts.cbegin(), ts.cend());
+      min_        = *minmax.first;
+      max_        = *minmax.second;
+      avg         = std::accumulate(ts.cbegin(), ts.cend(), 0.0) / ranks();
+    } else if (profiling_)
+      avg = min_ = max_ = timer_;
+
+    using std::string;
+
+    streamer_master(rank()) << string('-', 100) << "\n\n"
+                            << string(' ', 15) << "transfer finished\n";
+    if (profiling_)
+      streamer_master(rank())
+          << string(' ', 15) << "time used: " << std::scientific << "min "
+          << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
+          << '\n';
+    streamer_master(rank()) << '\n' << string('-', 100) << '\n';
+  }
+
+  ///@}
+protected:
+  /// \brief communicator
+  MPI_Comm comm_;
+
+  /// \brief blue mesh
+  IMeshDB B_;
+
+  /// \brief green mesh
+  IMeshDB G_;
+
+  /// \brief dimension
+  int dim_;
+
+  /// \brief flag to indicate the mapper is ready for transfering
+  bool ready_;
+
+  /// \brief whether do simple profiling
+  bool profiling_;
+
+  /// \brief a simple timer buffer
+  double timer_;
+
+  /// \brief parameter list
+  std::unique_ptr<Teuchos::ParameterList> opts_[2];
+
+  /// \brief trnafser operators
+  std::map<std::pair<std::string, std::string>,
+           Teuchos::RCP<DataTransferKit::MapOperator> >
+      operators_[2];
+
+  /// \brief map factory
+  static ::DataTransferKit::MapOperatorFactory factory_;
+};
+
+// define the factory
+::DataTransferKit::MapOperatorFactory Mapper::factory_;
+
+} // namespace parpydtk2
+
+#undef FOR_DIR

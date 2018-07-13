@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
 #include <unordered_map>
 
@@ -42,9 +41,12 @@ public:
   /// \brief constructor with moab instance
   /// \param[in] mdb moab instance
   /// \param[in] field_name field name
+  /// \param[in] set mesh set number
   /// \param[in] dim field dimension
-  FieldData(::moab::Core &mdb, const std::string &field_name, int dim = 1)
-      : mdb_(mdb), fn_(field_name), dim_(dim) {
+  /// \note \a set is not the same as mesh set in MOAB
+  FieldData(::moab::Core &mdb, const std::string &field_name, int set,
+            int dim = 1)
+      : mdb_(mdb), fn_(field_name), set_(set), dim_(dim) {
     ::moab::ErrorCode ret;
     // create tag
     double dv[dim];
@@ -84,12 +86,21 @@ public:
   /// \brief check the dimension
   inline int dim() const noexcept { return dim_; }
 
+  /// \brief check the set ID
+  inline int set() const noexcept { return set_; }
+
+  /// \brief get MOAB tag
+  inline const ::moab::Tag &tag() const noexcept { return tag_; }
+
 protected:
   /// \brief reference to moab instance
   ::moab::Core &mdb_;
 
   /// \brief field name
   std::string fn_;
+
+  /// \brief set count
+  int set_;
 
   /// \brief field dimension
   int dim_;
@@ -114,12 +125,14 @@ public:
   /// \brief create an data field
   /// \param[in] mdb moab data base
   /// \param[in] field_name field name
+  /// \param[in] set mesh set number
   /// \param[in] dim field dimension
-  inline void create(::moab::Core &mdb, const std::string &field_name,
+  /// \note \a set is not the same as mesh set in MOAB
+  inline void create(::moab::Core &mdb, const std::string &field_name, int set,
                      int dim = 1) {
     // use move
     base_t::emplace(
-        std::make_pair(field_name, new FieldData(mdb, field_name, dim)));
+        std::make_pair(field_name, new FieldData(mdb, field_name, set, dim)));
   }
 
   /// \brief get a reference to a field data
@@ -143,11 +156,5 @@ public:
     }
   }
 };
-
-void foo() {
-  FieldDataSet a;
-  moab::Core   d;
-  a.emplace(std::make_pair("sdf", new FieldData(d, "sdf")));
-}
 
 } // namespace parpydtk2

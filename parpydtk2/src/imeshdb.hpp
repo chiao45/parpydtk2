@@ -25,12 +25,17 @@
 
 #pragma once
 
-#include <string>
+#include <vector>
 
 #include "field.hpp"
 
+// trilinos
 #include <Teuchos_RCP.hpp>
-#include <moab/ParallelComm.hpp>
+#include <DTK_MoabManager.hpp>
+#include <Tpetra_MultiVector.hpp>
+
+// moab
+#include <moab/ParallelComm.hpp> // mpi.h in here
 #include <MBParallelConventions.h>
 
 namespace parpydtk2 {
@@ -59,11 +64,10 @@ class IMeshDB {
 
 public:
   /// \brief constructor with communicator
-  /// \param[in] name user defined mesh name
   /// \param[in] comm communicator
-  explicit IMeshDB(const std::string &name, MPI_Comm comm = MPI_COMM_WORLD)
-      : name_(name), mdb_(), par_(new ::moab::ParallelComm(&mdb_, comm), true),
-        vset_(root_set), created_(false), usergid_(false) {
+  explicit IMeshDB(MPI_Comm comm = MPI_COMM_WORLD)
+      : mdb_(), par_(new ::moab::ParallelComm(&mdb_, comm), true),
+        vsets_(1, root_set), locals_(1), created_(false), usergid_(false) {
     init_();
   }
 
@@ -90,24 +94,38 @@ public:
     created_ = false;
   }
 
+  /// \brief create a new vertex set
+  inline void create_vset() {
+    entity_t          vset;
+    ::moab::ErrorCode ret = mdb_.create_meshset(moab::MESHSET_SET, vset);
+    handle_moab_error(ret);
+    vsets_.emplace_back(vset);
+    locals_.push_back(moab::Range());
+  }
+
   /// \brief create vertices
   /// \param[in] nv number of vertices
   /// \param[in] coords coords values
-  inline void create_vertices(int nv, const double *coords) {
+  /// \param[in] set_id set ID
+  inline void create_vertices(int nv, const double *coords,
+                              unsigned set_id = 0u) {
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
     ::moab::Range     verts;
     ::moab::ErrorCode ret = mdb_.create_vertices(coords, nv, verts);
     handle_moab_error(ret);
-    locals_.merge(verts);
+    locals_[set_id].merge(verts);
   }
 
   /// \brief assign global IDs
   /// \param[in] nv number of local vertices
   /// \param[in] gids global IDs
+  /// \param[in] set_id set ID
   /// \note \a gids should be one-based indices
-  inline void assign_gids(int nv, const int *gids) {
-    show_warning_if(nv != locals_.size(),
+  inline void assign_gids(int nv, const int *gids, unsigned set_id = 0u) {
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+    show_warning_if(nv != locals_[set_id].size(),
                     "global ID size and vertex size do not match");
-    moab::ErrorCode ret = mdb_.tag_set_data(gidtag_, locals_, gids);
+    moab::ErrorCode ret = mdb_.tag_set_data(gidtag_, locals_[set_id], gids);
     handle_moab_error(ret);
     usergid_ = true;
   }
@@ -130,28 +148,66 @@ public:
       show_warning_if(
           usergid_,
           "the trivial_gid is on in finish_create, your GIDs will be ignored");
-      moab::ErrorCode ret = par_->assign_global_ids(vset_, 0);
-      handle_moab_error(ret);
+      for (const auto &vset : vsets_) {
+        moab::ErrorCode ret = par_->assign_global_ids(vset, 0);
+        handle_moab_error(ret);
+      }
     } else {
       show_warning_if(!usergid_ && (ranks() > 1),
                       "critical!! Global IDs are missing!");
     }
     if (rank() > 1) {
       // this probably does nothing
-      ::moab::ErrorCode ret = par_->resolve_shared_ents(vset_, 0, 0);
-      handle_moab_error(ret);
+      for (const auto &vset : vsets_) {
+        ::moab::ErrorCode ret = par_->resolve_shared_ents(vset, 0, 0);
+        handle_moab_error(ret);
+      }
+    }
+
+    // assign some values ot fields
+    std::vector<double> values;
+    int                 dim = 1;
+    for (const auto &field : fields_)
+      dim = std::max(dim, field.second->dim());
+    for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
+      values.resize(size(set_id) * dim, 0.0);
+      for (auto &field : fields_)
+        field.second->assign(locals_[set_id], values.data());
+    }
+
+    // set up moab manager
+    for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
+      mngrs_.emplace_back(par_, vsets_[set_id], false);
+    }
+    for (const auto &field : fields_) {
+      const std::string &name   = *field.second;
+      const ::moab::Tag &tag    = field.second->tag();
+      int                set_id = field.second->set();
+      dtkfields_.emplace(std::make_pair(
+          name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
+                                           vsets_[set_id], tag))));
     }
   }
 
   /// \brief check mesh size
-  inline int size() const noexcept { return locals_.size(); }
+  /// \param[in] set_id set ID
+  inline int size(unsigned set_id = 0u) const {
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+    return locals_[set_id].size();
+  }
+
+  /// \brief check the set number
+  inline int sets() const noexcept { return vsets_.size(); }
 
   /// \brief create a field
   /// \param[in] field_name field name
+  /// \param[in] set_id set ID
   /// \param[in] dim field dimension
-  inline void create_field(const std::string &field_name, int dim = 1) {
+  inline void create_field(const std::string &field_name, unsigned set_id = 0u,
+                           int dim = 1) {
     throw_error_if(dim < 1, "invalid field dimension");
-    fields_.create(mdb_, field_name, dim);
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+    fields_.create(mdb_, field_name, set_id, dim);
   }
 
   /// \brief check if we have a field
@@ -166,45 +222,66 @@ public:
     return fields_[field_name].dim(); // operator[] throws
   }
 
+  /// \brief check field set id
+  /// \param[in] field_name field name
+  inline int field_set_id(const std::string &field_name) const {
+    return fields_[field_name].set(); // operator[] throws
+  }
+
   /// \brief assign a value to a field
   /// \param[in] field_name field name
   /// \param[in] values field data values
-  inline void assign_field(const std::string &field_name,
-                           const double *     values) {
+  /// \param[in] set_id set ID
+  inline void assign_field(const std::string &field_name, const double *values,
+                           unsigned set_id = 0u) {
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].assign(locals_, values); // operator[] throws
+    fields_[field_name].assign(locals_[set_id], values); // operator[] throws
   }
 
   /// \brief extract value
   /// \param[in] field_name field name
   /// \param[out] values field data values
-  inline void extract_field(const std::string &field_name,
-                            double *           values) const {
+  /// \param[in] set_id set ID
+  inline void extract_field(const std::string &field_name, double *values,
+                            unsigned set_id = 0u) const {
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].extract(locals_, values); // operator[] throws
+    fields_[field_name].extract(locals_[set_id], values); // operator[] throws
   }
 
   ///@}
 
-protected:
-  /// \brief mesh name
-  std::string name_;
+  /// \brief get the manger
+  std::vector<DataTransferKit::MoabManager> &mangers() noexcept {
+    return mngrs_;
+  }
 
+  /// \brief set geometry dimension
+  /// \param[in] dim dimension
+  inline void set_dimension(int dim) {
+    throw_error_if(dim < 1 || dim > 3, "invalid dimension");
+    ::moab::ErrorCode ret = mdb_.set_dimension(dim);
+    handle_moab_error(ret);
+  }
+
+  /// \brief check if ready
+  bool ready() const noexcept { return created_; }
+
+protected:
   /// \brief moab instance
   ::moab::Core mdb_;
 
   /// \brief moab parallel interface
   ::Teuchos::RCP<moab::ParallelComm> par_;
 
-  /// \brief vertice set
-  entity_t vset_;
+  /// \brief vertex sets
+  std::vector<entity_t> vsets_;
 
   /// \brief local vertex range
-  ::moab::Range locals_;
+  std::vector<moab::Range> locals_;
 
   /// \brief field data set
   FieldDataSet fields_;
@@ -217,6 +294,23 @@ protected:
 
   /// \brief flag to indicate if we have user computed global ID
   bool usergid_;
+
+  /// \brief DTK MOAB manager
+  std::vector<DataTransferKit::MoabManager> mngrs_;
+
+  /// \brief handy typedef
+  typedef std::unordered_map<
+      std::string,
+      std::pair<int, Teuchos::RCP<Tpetra::MultiVector<
+                         double, int, DataTransferKit::SupportId> > > >
+      dtk_field_t;
+
+  /// \brief DTK multi vector for MOAB tags
+  dtk_field_t dtkfields_;
+
+public:
+  /// \brief get the dtk fields
+  dtk_field_t &dtk_fields() noexcept { return dtkfields_; }
 };
 
 } // namespace parpydtk2
