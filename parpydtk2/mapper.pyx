@@ -53,6 +53,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
         int rank()
         MPI.MPI_Comm comm()
         void set_dimension(int dim) except +
+        int dimension()
         _IMeshDB &blue_mesh()
         _IMeshDB &green_mesh()
         void begin_initialization() except +
@@ -179,14 +180,9 @@ cdef class IMeshDB:
         """
         return self.mdb.size(set_id)
 
+    @property
     def sets(self):
-        """Get the nunber of sets
-
-        Returns
-        -------
-        int
-            number of sets
-        """
+        """int: Get the number of sets"""
         return self.mdb.sets()
 
     def create_field(self, str field_name, unsigned set_id=0, int dim=1):
@@ -336,57 +332,55 @@ cdef class Mapper:
     def __dealloc__(self):
         del self.mp
 
+    @property
     def ranks(self):
-        """Check the ranks
-
-        Returns
-        -------
-        int
-            total process number
-        """
-        return self.mp.ranks()
-
-    def rank(self):
-        """Check "my" rank
-
-        Returns
-        -------
-        int
-            my rank
+        """int: Check the total process number
 
         See Also
         --------
-        :func:`ranks` : get the total communicator size
+        :attr:`rank` : "my" rank
+        """
+        return self.mp.ranks()
+
+    @property
+    def rank(self):
+        """int: Check "my" rank
+
+        See Also
+        --------
+        :attr:`ranks` : get the total communicator size
+        :attr:`comm` : MPI communicator
         """
         return self.mp.rank()
 
+    @property
     def comm(self):
-        """Get the communicator
+        """MPI.Comm: Get the communicator
 
-        Returns
-        -------
-        MPI.Comm
-            MPI communicator
+        See Also
+        --------
+        :attr:`ranks` : get the total communicator size
+        :attr:`rank` : "my" rank
         """
         return <MPI.Comm> self.mp.comm()
 
-    def set_dimension(self, int dim):
-        """Set the spacial dimension
+    @property
+    def dimension(self):
+        """int: Get the problem dimension
 
-        .. note:: the default value is 3
+        .. note:: this is the spacial dimension
         """
+        return self.mp.dimension()
+
+    @dimension.setter
+    def dimension(self, int dim):
         self.mp.set_dimension(dim)
 
     @property
     def blue_mesh(self):
-        """Get the blue side mesh
+        """:class:`IMeshDB`: Get the blue side mesh database
 
         .. note:: this call is where you can access the meshdb
-
-        Returns
-        -------
-        :class:`IMeshDB`
-            mesh database of blue side
 
         See Also
         --------
@@ -398,14 +392,9 @@ cdef class Mapper:
 
     @property
     def green_mesh(self):
-        """Get the blue side mesh
+        """:class:`IMeshDB`: Get the blue side mesh database
 
         .. note:: this call is where you can access the meshdb
-
-        Returns
-        -------
-        :class:`IMeshDB`
-            mesh database of blue side
 
         See Also
         --------

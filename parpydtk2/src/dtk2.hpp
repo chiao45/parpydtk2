@@ -161,6 +161,9 @@ public:
     opts_[i]->sublist("Point Cloud", true).set("Spatial Dimension", dim_);
   }
 
+  /// \brief get the dimension
+  inline int dimension() const noexcept { return dim_; }
+
   /// \brief get blue mesh
   inline IMeshDB &blue_mesh() noexcept { return B_; }
 
