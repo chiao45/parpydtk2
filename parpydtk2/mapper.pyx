@@ -53,6 +53,20 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2':
         int rank()
         MPI.MPI_Comm comm()
         void set_dimension(int dim) except +
+        void use_mmls()
+        void use_spline()
+        void use_n2n(bool matching)
+        void set_basis(int basis) except +
+        void use_knn_b(int knn) except +
+        void use_knn_g(int knn) except +
+        void use_radius_b(double r) except +
+        void use_radius_g(double r) except +
+        int check_method()
+        int check_basis()
+        int knn_b()
+        int knn_g()
+        double radius_b()
+        double radius_g()
         int dimension()
         _IMeshDB &blue_mesh()
         _IMeshDB &green_mesh()
@@ -403,6 +417,123 @@ cdef class Mapper:
         cdef IMeshDB mdb = IMeshDB()
         mdb.mdb = <_IMeshDB *> &self.mp.green_mesh()
         return mdb
+
+    @property
+    def method(self):
+        """int: Get the method tag
+
+        See Also
+        --------
+        :attr:`basis` : the basis function and order attribute
+        """
+        return self.mp.check_method()
+
+    @method.setter
+    def method(self, int m):
+        if m == 0:
+            # mls
+            self.mp.use_mmls()
+        elif m == 1:
+            self.mp.use_spline()
+        elif m == 2:
+            self.mp.use_n2n(<bool> 0)
+        else:
+            raise AttributeError('unknown method')
+
+    def set_matching_flag_n2n(self, bool matching):
+        """Set the matching flag for N2N
+
+        .. note:: this function will not throw even if you dont use n2n
+
+        Parameters
+        ----------
+        matching : bool
+            `True` if the interfaces are matching
+        """
+        cdef bool flag = <bool> 1 if matching else <bool> 0
+        self.mp.use_n2n(flag)
+
+    @property
+    def basis(self):
+        """int: Get the basis function flag
+
+        See Also
+        --------
+        :attr:`method` : get the method tag
+        """
+        return self.mp.check_basis()
+
+    @basis.setter
+    def basis(self, int bf):
+        self.mp.set_basis(bf)
+
+    @property
+    def knn_b(self):
+        """int: KNN of blue mesh
+
+        .. note:: if blue does not use KNN, then -1 returned
+
+        See Also
+        --------
+        :attr:`blue_mesh` : blue mesh database
+        :attr:`knn_g` : green knn
+        """
+        return self.mp.knn_b()
+
+    @knn_b.setter
+    def knn_b(self, int knn):
+        self.mp.use_knn_b(knn)
+
+    @property
+    def knn_g(self):
+        """int: KNN of green mesh
+
+        .. note:: if green does not use KNN, then -1 returned
+
+        See Also
+        --------
+        :attr:`green_mesh` : green mesh database
+        :attr:`knn_b` : blue knn
+        """
+        return self.mp.knn_g()
+
+    @knn_g.setter
+    def knn_g(self, int knn):
+        self.mp.use_knn_g(knn)
+
+    @property
+    def radius_b(self):
+        """float: physical domain radius support for blue mesh
+
+        .. note:: if blue does not use RBF-search, then -1.0 returned
+
+        See Also
+        --------
+        :attr:`blue_mesh` : blue mesh database
+        :attr:`radius_g` : green radius
+        """
+        return self.mp.radius_b()
+
+    @radius_b.setter
+    def radius_b(self, double r):
+        self.mp.use_radius_b(r)
+
+    @property
+    def radius_g(self):
+        """float: physical domain radius support for green mesh
+
+        .. note:: if green does not use RBF-search, then -1.0 returned
+
+        See Also
+        --------
+        :attr:`green_mesh` : green mesh database
+        :attr:`radius_b` : blue radius
+        """
+        return self.mp.radius_g()
+
+    @radius_g.setter
+    def radius_g(self, double r):
+        self.mp.use_radius_g(r)
 
     def begin_initialization(self):
         """Initialization starter

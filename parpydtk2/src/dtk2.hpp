@@ -110,6 +110,36 @@ class Mapper {
     return ss.str();
   }
 
+  /// \brief helper for set local search
+  /// \tparam _Dir direction
+  /// \tparam _V value type
+  /// \param[in] type search type
+  /// \param[in] value tag for value
+  /// \param[in] v actual value
+  template <bool _Dir, typename _V>
+  inline void set_search(const std::string &type, const std::string &value,
+                         const _V &v) noexcept {
+    auto &list = opts_[_Dir]->sublist("Point Cloud", true);
+    list.set("Type of Search", type);
+    list.set(value, v);
+  }
+
+  /// \brief helper for get search info
+  /// \tparam _Dir direction
+  /// \tparam _V value type
+  /// \param[in] type search type
+  /// \param[in] value tag for value
+  /// \param[in] dft default value
+  template <bool _Dir, typename _V>
+  inline _V get_search(const std::string &type, const std::string &value,
+                       const _V &dft) const noexcept {
+    const auto &       list = opts_[_Dir]->sublist("Point Cloud", true);
+    const std::string &tp   = list.get<std::string>("Type of Search");
+    if (tp != type)
+      return dft;
+    return list.get<_V>(value);
+  }
+
 public:
   /// \brief constructor
   /// \param[in] comm communicator
@@ -159,6 +189,153 @@ public:
     dim_ = dim;
     FOR_DIR(i)
     opts_[i]->sublist("Point Cloud", true).set("Spatial Dimension", dim_);
+  }
+
+  /// \brief use moving least square, this is the default method
+  /// \sa use_spline, use_n2n
+  inline void use_mmls() noexcept {
+    FOR_DIR(i)
+    opts_[i]
+        ->sublist("Point Cloud", true)
+        .set("Map Type", "Moving Least Square Reconstruction");
+  }
+
+  /// \brief use spline interpolation method
+  /// \sa use_mmls, use_n2n
+  inline void use_spline() noexcept {
+    FOR_DIR(i)
+    opts_[i]
+        ->sublist("Point Cloud", true)
+        .set("Map Type", "Spline Interpolation");
+  }
+
+  /// \brief use node 2 node project
+  /// \param[in] matching are the interfaces mathing?
+  /// \sa use_mmls, use_spline
+  inline void use_n2n(bool matching = false) noexcept {
+    FOR_DIR(i) {
+      auto &list = opts_[i]->sublist("Point Cloud", true);
+      list.set("Map Type", "Node To Node");
+      list.set("Matching Nodes", matching);
+    }
+  }
+
+  /// \brief set basis funciton, default is Wendland 4th order
+  /// \param[in] basis basis function and order
+  /// \sa BasisFunctions
+  inline void set_basis(int basis) {
+    throw_error_if(basis < 0 || basis > BUHMANN3, "unknown method");
+    if (basis != BUHMANN3) {
+      const bool        wld = basis < 3;
+      const std::string bm  = wld ? "Wendland" : "Wu";
+      basis %= 3;
+      const int order = 2 * (basis + 1);
+      FOR_DIR(i) {
+        auto &list = opts_[i]->sublist("Point Cloud", true);
+        list.set("Basis Type", bm);
+        list.set("Basis Order", order);
+      }
+      return;
+    }
+    FOR_DIR(i) {
+      auto &list = opts_[i]->sublist("Point Cloud", true);
+      list.set("Basis Type", "Buhmann");
+      list.set("Basis Order", 3);
+    }
+  }
+
+  /// \brief use knn for blue mesh
+  /// \param[in] knn number of nearest neighbors
+  inline void use_knn_b(int knn) {
+    throw_error_if(knn <= 0, "invalid number of knn");
+    show_warning_if(knn < 3, "potentially to small knn");
+    set_search<true>("Nearest Neighbor", "Num Neighbors", knn);
+  }
+
+  /// \brief use knn for green mesh
+  /// \param[in] knn number of nearest neighbors
+  inline void use_knn_g(int knn) {
+    throw_error_if(knn <= 0, "invalid number of knn");
+    show_warning_if(knn < 3, "potentially to small knn");
+    set_search<false>("Nearest Neighbor", "Num Neighbors", knn);
+  }
+
+  /// \brief use radius for blue
+  /// \param[in] r physical domain radius support
+  /// \sa use_knn
+  inline void use_radius_b(double r) {
+    throw_error_if(r <= 0.0, "invalid radius number");
+    set_search<true>("Radius", "RBF Radius", r);
+  }
+
+  /// \brief use radius for green
+  /// \param[in] r physical domain radius support
+  /// \sa use_knn
+  inline void use_radius_g(double r) {
+    throw_error_if(r <= 0.0, "invalid radius number");
+    set_search<false>("Radius", "RBF Radius", r);
+  }
+
+  /// \brief check method
+  inline int check_method() const noexcept {
+    // since we assign all parameters symmtrically, we just check one
+    const std::string &method =
+        opts_[0]->sublist("Point Cloud", true).get<std::string>("Map Type");
+    if (method == "Moving Least Square Reconstruction")
+      return MMLS;
+    if (method == "Spline Interpolation")
+      return SPLINE;
+    return N2N;
+  }
+
+  /// \brief check basis
+  inline int check_basis() const noexcept {
+    const std::string &basis =
+        opts_[0]->sublist("Point Cloud", true).get<std::string>("Basis Type");
+    const int &order =
+        opts_[0]->sublist("Point Cloud", true).get<int>("Basis Order");
+    if (basis == "Wendland")
+      switch (order) {
+      case 2:
+        return WENDLAND2;
+      case 4:
+        return WENDLAND4;
+      case 6:
+        return WENDLAND6;
+      }
+
+    if (basis == "Wu")
+      switch (order) {
+      case 2:
+        return WU2;
+      case 4:
+        return WU4;
+      case 6:
+        return WU6;
+      }
+    return BUHMANN3;
+  }
+
+  /// \brief check blue knn
+  /// \note if blue does not use knn, then negative value returned
+  inline int knn_b() const noexcept {
+    return get_search<true>("Nearest Neighbor", "Num Neighbors", -1);
+  }
+
+  /// \brief check green knn
+  inline int knn_g() const noexcept {
+    return get_search<false>("Nearest Neighbor", "Num Neighbors", -1);
+  }
+
+  /// \brief check blue radius
+  /// \note if blue does not use radius, then -1.0 is returned
+  inline double radius_b() const noexcept {
+    return get_search<true>("Radius", "RBF Radius", -1.0);
+  }
+
+  /// \brief check green radius
+  inline double radius_g() const noexcept {
+    return get_search<false>("Radius", "RBF Radius", -1.0);
   }
 
   /// \brief get the dimension
@@ -247,9 +424,9 @@ public:
       int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
                            comm_);
       if (ret != MPI_SUCCESS) {
-        // NOTE that the default handler in mpi will directly abort, as a mapper
-        // we will not modify the mpi handler (this should be the task of
-        // application codes)
+        // NOTE that the default handler in mpi will directly abort, as a
+        // mapper we will not modify the mpi handler (this should be the task
+        // of application codes)
         char msg[MPI_MAX_ERROR_STRING];
         int  dummy, err_cls;
         MPI_Error_string(ret, msg, &dummy);
@@ -324,9 +501,9 @@ public:
       int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
                            comm_);
       if (ret != MPI_SUCCESS) {
-        // NOTE that the default handler in mpi will directly abort, as a mapper
-        // we will not modify the mpi handler (this should be the task of
-        // application codes)
+        // NOTE that the default handler in mpi will directly abort, as a
+        // mapper we will not modify the mpi handler (this should be the task
+        // of application codes)
         char msg[MPI_MAX_ERROR_STRING];
         int  dummy, err_cls;
         MPI_Error_string(ret, msg, &dummy);
