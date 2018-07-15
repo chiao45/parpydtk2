@@ -25,7 +25,10 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
+#include <limits>
+#include <algorithm>
 
 #include "field.hpp"
 
@@ -45,7 +48,7 @@ namespace parpydtk2 {
 class IMeshDB {
   /// \brief helper for clean up mesh
   /// \param[in] del whether or not delete mesh
-  void init_(bool del = false) {
+  inline void init_(bool del = false) {
     if (del) {
       mdb_.delete_mesh();
       locals_.clear();
@@ -62,22 +65,90 @@ class IMeshDB {
     handle_moab_error(ret);
   }
 
+  /// \brief handle all vectors
+  inline void reset_vecs_() noexcept {
+    vsets_.resize(1, root_set);
+    locals_.resize(1);
+    bboxes_.resize(1);
+    for (int i = 0; i < 3; ++i)
+      bboxes_[0][i] = std::numeric_limits<double>::max();
+    for (int i = 3; i < 6; ++i)
+      bboxes_[0][i] = std::numeric_limits<double>::min();
+  }
+
+  /// \brief initialize empty bounding boxes
+  /// \param[in] i index if < 0 then init all
+  inline void init_bbox_(int i = -1) noexcept {
+    static constexpr double min_ = std::numeric_limits<double>::min();
+    static constexpr double max_ = std::numeric_limits<double>::max();
+    if (i < 0)
+      for (auto &box : bboxes_) {
+        int j = 0;
+        for (; j < 3; ++j)
+          box[j] = max_;
+        for (; j < 6; ++j)
+          box[j] = min_;
+      }
+    else {
+      int j = 0;
+      for (; j < 3; ++j)
+        bboxes_[i][j] = max_;
+      for (; j < 6; ++j)
+        bboxes_[i][j] = min_;
+    }
+  }
+
+  /// \brief compute all bounding box
+  inline void cmpt_bboxes_() {
+    ::moab::ErrorCode ret;
+    for (int i = 0; i < vsets_.size(); ++i) {
+      const auto &  vset = vsets_[i];
+      const int     sz   = size(i);
+      const double *X[3];
+      auto &        box = bboxes_[i];
+      ret               = mdb_.get_coords(vset, X[0], X[1], X[2]);
+      int j = 0, k = 3, dir = 0;
+      if (ret == ::moab::MB_SUCCESS) {
+        // opt version
+        for (; dir < 3; ++dir) {
+          auto minmax = std::minmax_element(X[dir], X[dir] + sz);
+          box[j++]    = *minmax.first;
+          box[k++]    = *minmax.second;
+        }
+      } else {
+        // loop 1by1
+        double               X[3];
+        const ::moab::Range &vs = locals_[i];
+        for (const auto &v : vs) {
+          ret = mdb_.get_coords(&v, 1, X);
+          handle_moab_error(ret);
+          for (dir = j = 0, k = 3; dir < 3; ++dir, ++j, ++k) {
+            box[j] = std::min(box[j], X[dir]);
+            box[k] = std::max(box[k], X[dir]);
+          }
+        }
+      }
+    }
+  }
+
 public:
   /// \brief constructor with communicator
   /// \param[in] comm communicator
   explicit IMeshDB(MPI_Comm comm = MPI_COMM_WORLD)
       : mdb_(), par_(new ::moab::ParallelComm(&mdb_, comm), true),
-        vsets_(1, root_set), locals_(1), created_(false), usergid_(false) {
+        vsets_(1, root_set), locals_(1), bboxes_(1), created_(false),
+        usergid_(false) {
     init_();
+    init_bbox_(0);
   }
 
   virtual ~IMeshDB() = default;
 
   /// \brief get total ranks
-  int ranks() const noexcept { return par_->size(); }
+  inline int ranks() const noexcept { return par_->size(); }
 
   /// \brief get my rank
-  int rank() const noexcept { return par_->rank(); }
+  inline int rank() const noexcept { return par_->rank(); }
 
   /// \brief get mesh
   ::Teuchos::RCP<moab::ParallelComm> pcomm() const noexcept { return par_; }
@@ -90,6 +161,7 @@ public:
     if (created_) {
       show_warning("current mesh will be removed");
       init_(true);
+      reset_vecs_();
     }
     created_ = false;
   }
@@ -101,6 +173,8 @@ public:
     handle_moab_error(ret);
     vsets_.emplace_back(vset);
     locals_.push_back(moab::Range());
+    bboxes_.push_back(std::array<double, 6>());
+    init_bbox_(bboxes_.size() - 1);
   }
 
   /// \brief create vertices
@@ -187,6 +261,9 @@ public:
           name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
                                            vsets_[set_id], tag))));
     }
+
+    // compute bboxes
+    cmpt_bboxes_();
   }
 
   /// \brief check mesh size
@@ -198,6 +275,16 @@ public:
 
   /// \brief check the set number
   inline int sets() const noexcept { return vsets_.size(); }
+
+  /// \brief get bounding box
+  /// \param[out] v values
+  /// \param[in] set_id set ID
+  inline void get_bbox(double *v, unsigned set_id = 0u) const {
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+    const auto &box = bboxes_[set_id];
+    for (int i = 0; i < 6; ++i)
+      v[i] = box[i];
+  }
 
   /// \brief create a field
   /// \param[in] field_name field name
@@ -255,7 +342,7 @@ public:
   ///@}
 
   /// \brief get the manger
-  std::vector<DataTransferKit::MoabManager> &mangers() noexcept {
+  inline std::vector<DataTransferKit::MoabManager> &mangers() noexcept {
     return mngrs_;
   }
 
@@ -268,7 +355,7 @@ public:
   }
 
   /// \brief check if ready
-  bool ready() const noexcept { return created_; }
+  inline bool ready() const noexcept { return created_; }
 
 protected:
   /// \brief moab instance
@@ -282,6 +369,9 @@ protected:
 
   /// \brief local vertex range
   std::vector<moab::Range> locals_;
+
+  /// \brief bounding boxes
+  std::vector<std::array<double, 6> > bboxes_;
 
   /// \brief field data set
   FieldDataSet fields_;
@@ -310,7 +400,7 @@ protected:
 
 public:
   /// \brief get the dtk fields
-  dtk_field_t &dtk_fields() noexcept { return dtkfields_; }
+  inline dtk_field_t &dtk_fields() noexcept { return dtkfields_; }
 };
 
 } // namespace parpydtk2
