@@ -30,3 +30,5 @@ grids.cpp
 geometry.cpp
 *.egg-info
 .clang_complete
+test.py
+test*.py
