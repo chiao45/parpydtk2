@@ -360,9 +360,9 @@ public:
     streamer_master(B_.rank()) << '\n'
                                << string(100, '-') << "\n\n"
                                << string(15, ' ') << "blue ===> green:\n"
-                               << info[0] << '\n'
-                               << "green ===> blue:\n"
                                << info[1] << '\n'
+                               << string(15, ' ') << "green ===> blue:\n"
+                               << info[0] << '\n'
                                << string(100, '-') << '\n';
     ready_ = true; // trigger flag here
     timer_ = 0.0;
