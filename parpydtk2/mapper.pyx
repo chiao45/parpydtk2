@@ -355,9 +355,9 @@ cdef class Mapper:
 
     def __cinit__(self, MPI.Comm comm=MPI.COMM_WORLD, profiling=True):
         cdef:
-            std_string version = __version__.decode('UTF-8')
+            std_string version = __version__.encode('UTF-8')
             std_string date = \
-                datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').decode('UTF-8')
+                datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').encode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
             cdef MPI.MPI_Comm comm_ = <MPI.MPI_Comm> comm.ob_mpi
         self.mp = new _Mapper(comm_, version, date, prof)
