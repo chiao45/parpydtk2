@@ -57,7 +57,7 @@ public:
                               ::moab::MB_TAG_DENSE | ::moab::MB_TAG_CREAT, dv,
                               &created);
     handle_moab_error(ret);
-    show_warning_if(created, fn_ + " has already be created");
+    show_warning_if(!created, fn_ + " has already be created");
   }
 
   virtual ~FieldData() = default;
