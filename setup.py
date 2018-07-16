@@ -1,5 +1,6 @@
 from distutils.core import setup
 from distutils.extension import Extension
+from distutils.command.clean import clean
 import sys
 import re
 import numpy
@@ -69,6 +70,23 @@ classifiers = [
 ]
 
 
+class MyClean(clean):
+    def run(self):
+        import subprocess as sp
+        super().run()
+        sp.Popen(
+            'rm -rf parpydtk2/__pycache__ __pycache__',
+            executable='/bin/bash',
+            shell=True
+        )
+        if self.all:
+            sp.Popen(
+                'rm -rf parpydtk2/*.so',
+                executable='/bin/bash',
+                shell=True
+            )
+
+
 setup(
     name='parpydtk2',
     version=version,
@@ -76,7 +94,8 @@ setup(
     author='Qiao Chen',
     author_email='benechiao@gmail.com',
     keywords='Math',
-    packages=['pydtk2'],
+    packages=['parpydtk2'],
     ext_modules=[ext],
-    classifiers=classifiers
+    classifiers=classifiers,
+    cmdclass={'clean': MyClean},
 )
