@@ -238,6 +238,13 @@ public:
       }
     }
 
+    // assign partition based on processes, is this needed in DTK?
+    for (const auto &vset : vsets_) {
+      int               rk  = rank();
+      ::moab::ErrorCode ret = mdb_.tag_set_data(parttag_, &vset, 1, &rk);
+      handle_moab_error(ret);
+    }
+
     // assign some values ot fields
     std::vector<double> values;
     int                 dim = 1;

@@ -52,12 +52,13 @@ public:
     double dv[dim];
     for (int i = 0; i < dim; ++i)
       dv[i] = 0.0;
-    bool created = false;
     ret = mdb_.tag_get_handle(fn_.c_str(), dim_, moab::MB_TYPE_DOUBLE, tag_,
-                              ::moab::MB_TAG_DENSE | ::moab::MB_TAG_CREAT, dv,
-                              &created);
-    handle_moab_error(ret);
-    show_warning_if(!created, fn_ + " has already be created");
+                              ::moab::MB_TAG_DENSE | ::moab::MB_TAG_CREAT, dv);
+    if (ret == ::moab::MB_ALREADY_ALLOCATED) {
+      show_warning(fn_ + " has already be created");
+    } else {
+      handle_moab_error(ret);
+    }
   }
 
   virtual ~FieldData() = default;
