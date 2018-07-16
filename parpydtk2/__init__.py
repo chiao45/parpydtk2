@@ -1,5 +1,6 @@
 import sys
 from ._version import __version__
+from .mapper import Mapper
 
 
 def _excepthook(exctype, value, traceback):
