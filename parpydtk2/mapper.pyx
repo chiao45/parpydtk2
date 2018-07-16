@@ -37,6 +37,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         int size(unsigned set_id) except +
         int sets()
         void get_bbox(double *v, unsigned set_id) except +
+        void get_gbbox(double *v, unsigned set_id) except +
         void create_field(const std_string &field_name, unsigned set_id, int dim) except +
         bool has_field(const std_string &field_name)
         int field_dim(const std_string &field_name) except +
@@ -216,6 +217,24 @@ cdef class IMeshDB:
         cdef cnp.ndarray[double, ndim=2, mode='c'] box = \
             np.empty(shape=(2, 3), dtype='double')
         self.mdb.get_bbox(<double *> box.data, set_id)
+        return box
+
+    def gbbox(self, unsigned set_id=0):
+        """Get the global bounding box [[min1,min2,min3],[max1,max2,max3]]
+
+        Parameters
+        ----------
+        set_id : int
+            set index
+
+        Returns
+        -------
+        np.ndarray
+            2x3 bounding box
+        """
+        cdef cnp.ndarray[double, ndim=2, mode='c'] box = \
+            np.empty(shape=(2, 3), dtype='double')
+        self.mdb.get_gbbox(<double *> box.data, set_id)
         return box
 
     def create_field(self, str field_name, unsigned set_id=0, int dim=1):

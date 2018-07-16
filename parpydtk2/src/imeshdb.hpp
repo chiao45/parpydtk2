@@ -70,6 +70,7 @@ class IMeshDB {
     vsets_.resize(1, root_set);
     locals_.resize(1);
     bboxes_.resize(1);
+    gbboxes_.resize(1);
     for (int i = 0; i < 3; ++i)
       bboxes_[0][i] = std::numeric_limits<double>::max();
     for (int i = 3; i < 6; ++i)
@@ -136,8 +137,8 @@ public:
   /// \param[in] comm communicator
   explicit IMeshDB(MPI_Comm comm = MPI_COMM_WORLD)
       : mdb_(), par_(new ::moab::ParallelComm(&mdb_, comm), true),
-        vsets_(1, root_set), locals_(1), bboxes_(1), created_(false),
-        usergid_(false) {
+        vsets_(1, root_set), locals_(1), bboxes_(1), gbboxes_(1),
+        created_(false), usergid_(false) {
     init_();
     init_bbox_(0);
   }
@@ -174,6 +175,7 @@ public:
     vsets_.emplace_back(vset);
     locals_.push_back(moab::Range());
     bboxes_.push_back(std::array<double, 6>());
+    gbboxes_.push_back(std::array<double, 6>());
     init_bbox_(bboxes_.size() - 1);
   }
 
@@ -271,6 +273,61 @@ public:
 
     // compute bboxes
     cmpt_bboxes_();
+
+    // compute global bounding boxes
+    if (ranks() == 1) {
+      for (int i = 0; i < bboxes_.size(); ++i)
+        for (int j = 0; j < 6; ++j)
+          gbboxes_[i][j] = bboxes_[i][j];
+    } else {
+      // copy all local first
+      for (int i = 0; i < bboxes_.size(); ++i)
+        gbboxes_[i] = bboxes_[i];
+      // communication needed
+      const int           box_len = bboxes_.size() * 6;
+      std::vector<double> buffer(box_len * ranks());
+      double *            sendbuffer;
+      bool                can_free = false;
+      if (bboxes_.size() > 1) {
+        sendbuffer  = new double[box_len];
+        double *pos = sendbuffer;
+        for (const auto &box : bboxes_)
+          pos = std::copy(box.cbegin(), box.cend(), pos);
+        can_free = true;
+      } else
+        sendbuffer = bboxes_.front().data();
+      // allgather
+      int ret = MPI_Allgather(sendbuffer, box_len, MPI_DOUBLE, buffer.data(),
+                              box_len, MPI_DOUBLE, par_->comm());
+      if (can_free)
+        delete[] sendbuffer;
+      if (ret != MPI_SUCCESS) {
+        // NOTE that the default handler in mpi will directly abort, as a
+        // mapper we will not modify the mpi handler (this should be the task
+        // of application codes)
+        char msg[MPI_MAX_ERROR_STRING];
+        int  dummy, err_cls;
+        MPI_Error_string(ret, msg, &dummy);
+        MPI_Error_class(ret, &err_cls);
+        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                  << ", error_class: " << err_cls << ", msg: " << msg
+                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                  << __FILE__ << "():" << __LINE__ << '\n';
+        MPI_Abort(MPI_COMM_WORLD, ret);
+      }
+
+      // compute the global bounding boxes
+      for (int i = 0; i < gbboxes_.size(); ++i) {
+        auto &    gbox = gbboxes_[i];
+        const int ld   = i * 6;
+        for (int j = 0; j < ranks(); ++j)
+          for (int k = 0; k < 3; ++k) {
+            gbox[k] = std::min(gbox[k], buffer[box_len * j + ld + k]);
+            gbox[k + 3] =
+                std::max(gbox[k + 3], buffer[box_len * j + ld + k + 3]);
+          }
+      }
+    }
   }
 
   /// \brief check mesh size
@@ -289,6 +346,16 @@ public:
   inline void get_bbox(double *v, unsigned set_id = 0u) const {
     throw_error_if(set_id >= vsets_.size(), "exceed set count");
     const auto &box = bboxes_[set_id];
+    for (int i = 0; i < 6; ++i)
+      v[i] = box[i];
+  }
+
+  /// \brief get global bounding box
+  /// \param[out] v values
+  /// \param[in] set_id set ID
+  inline void get_gbbox(double *v, unsigned set_id = 0u) const {
+    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+    const auto &box = gbboxes_[set_id];
     for (int i = 0; i < 6; ++i)
       v[i] = box[i];
   }
@@ -379,6 +446,9 @@ protected:
 
   /// \brief bounding boxes
   std::vector<std::array<double, 6> > bboxes_;
+
+  /// \brief global bounding boxes
+  std::vector<std::array<double, 6> > gbboxes_;
 
   /// \brief field data set
   FieldDataSet fields_;
