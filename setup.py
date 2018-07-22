@@ -23,26 +23,7 @@ vfile.close()
 os.environ['CC'] = 'mpicxx'
 
 
-_libs = [
-    'MOAB',
-    'dtk_moabadapters',
-    'dtk_interface',
-    'teuchoscomm',
-    'teuchosparameterlist',
-    'teuchoscore',
-    'dtk_operators',
-    'stdc++',
-    'mpi',
-]
-
-_lib_dirs = [
-    '/usr/local/lib',
-    '/usr/lib/x86_64-linux-gnu',
-]
-
 _inc_dirs = [
-    '.',
-    '/usr/local/include',
     numpy.get_include(),
     mpi4py.get_include()
 ]
@@ -51,9 +32,6 @@ ext = Extension(
     'parpydtk2.mapper',
     ['parpydtk2/mapper.cpp'],
     include_dirs=_inc_dirs,
-    library_dirs=_lib_dirs,
-    libraries=_libs,
-    runtime_library_dirs=_lib_dirs,
     extra_compile_args=['-w', '-std=c++1z', '-march=native', '-O3'],
     language='c++'
 )
@@ -75,7 +53,7 @@ class MyClean(clean):
         import subprocess as sp
         super().run()
         sp.Popen(
-            'rm -rf parpydtk2/__pycache__ __pycache__',
+            'rm -rf parpydtk2/__pycache__ __pycache__ dist parpydtk2.egg-info',
             executable='/bin/bash',
             shell=True
         )
