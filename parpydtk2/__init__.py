@@ -3,12 +3,9 @@ from ._version import __version__
 from .mapper import Mapper
 
 
-def _excepthook(exctype, value, traceback):
+def _excepthook(exctype, value, tb):
     # override default excepthook
-    sys.__excepthook__(exctype, value, traceback)
-    import mpi4py
-    mpi4py.rc.initialize = False
-    mpi4py.rc.finalize = False
+    sys.__excepthook__(exctype, value, tb)
     from mpi4py import MPI
     if MPI.Is_initialized() and MPI.COMM_WORLD.size > 1:
         MPI.COMM_WORLD.Abort(1)
