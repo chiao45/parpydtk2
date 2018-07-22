@@ -17,7 +17,7 @@ cgmp.cpp
 CGmp.cmd
 foo
 bar
-pydtk2.egg-info
+parpydtk2.egg-info
 dist
 CGmp.cmd
 *.check
