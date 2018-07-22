@@ -39,6 +39,17 @@
 // helper macro
 #define FOR_DIR(__i) for (int __i = 0; i < 2; ++i)
 
+#if !defined(LEN1) || (LEN1 <= 0)
+/// \def LEN1
+/// \brief length of '-----' string
+#define LEN1 100
+#endif
+#if !defined(LEN2) || (LEN2 <= 0)
+/// \def LEN2
+/// \brief white spaces before option names
+#define LEN2 15
+#endif
+
 namespace parpydtk2 {
 
 /// \enum Methods
@@ -92,18 +103,18 @@ class Mapper {
     auto &             sub_list = list.sublist("Point Cloud", true);
     const bool         rs = sub_list.get<string>("Type of Search") == "Radius";
     std::ostringstream ss;
-    ss << string(15, ' ') << "map type: " << sub_list.get<string>("Map Type")
+    ss << string(LEN2, ' ') << "map type: " << sub_list.get<string>("Map Type")
        << '\n'
-       << string(15, ' ')
+       << string(LEN2, ' ')
        << "spatial dimension: " << sub_list.get<int>("Spatial Dimension")
        << '\n'
-       << string(15, ' ')
+       << string(LEN2, ' ')
        << "basis type: " << sub_list.get<string>("Basis Type") << '\n'
-       << string(15, ' ') << "basis order: " << sub_list.get<int>("Basis Order")
-       << '\n'
-       << string(15, ' ')
+       << string(LEN2, ' ')
+       << "basis order: " << sub_list.get<int>("Basis Order") << '\n'
+       << string(LEN2, ' ')
        << "type of search: " << sub_list.get<string>("Type of Search") << '\n'
-       << string(15, ' ') << (rs ? "radius: " : "knn: ")
+       << string(LEN2, ' ') << (rs ? "radius: " : "knn: ")
        << (rs ? sub_list.get<double>("RBF Radius")
               : sub_list.get<int>("Num Neighbors"))
        << '\n';
@@ -155,13 +166,13 @@ public:
     // NOTE pass in time should have "%b %d %Y %H:%M:%S" format
     streamer_master(B_.rank())
         << '\n'
-        << string(100, '-') << "\n\n"
-        << string(15, ' ') << "parpydtk2 version: " << version << '\n'
-        << string(15, ' ') << "mapper created time: " << date << '\n'
-        << string(15, ' ') << "binary built time: " << __DATE__ << ' '
+        << string(LEN1, '-') << "\n\n"
+        << string(LEN2, ' ') << "parpydtk2 version: " << version << '\n'
+        << string(LEN2, ' ') << "mapper created time: " << date << '\n'
+        << string(LEN2, ' ') << "binary built time: " << __DATE__ << ' '
         << __TIME__ << '\n'
-        << string(15, ' ') << "total processes: " << B_.ranks() << "\n\n"
-        << string(100, '-') << '\n';
+        << string(LEN2, ' ') << "total processes: " << B_.ranks() << "\n\n"
+        << string(LEN1, '-') << '\n';
 
     // init par lists
     init_parlist_();
@@ -358,12 +369,12 @@ public:
     FOR_DIR(i)
     info[i] = parse_list_(*opts_[i]);
     streamer_master(B_.rank()) << '\n'
-                               << string(100, '-') << "\n\n"
-                               << string(15, ' ') << "blue ===> green:\n"
+                               << string(LEN1, '-') << "\n\n"
+                               << string(LEN2, ' ') << "blue ===> green:\n"
                                << info[1] << '\n'
-                               << string(15, ' ') << "green ===> blue:\n"
+                               << string(LEN2, ' ') << "green ===> blue:\n"
                                << info[0] << '\n'
-                               << string(100, '-') << '\n';
+                               << string(LEN1, '-') << '\n';
     ready_ = true; // trigger flag here
     timer_ = 0.0;
   }
@@ -450,23 +461,23 @@ public:
     using std::string;
 
     streamer_master(rank())
-        << string(100, '-') << "\n\n"
-        << string(15, ' ') << "total registered coupling fields: "
+        << string(LEN1, '-') << "\n\n"
+        << string(LEN2, ' ') << "total registered coupling fields: "
         << operators_[0].size() + operators_[1].size() << '\n'
-        << string(15, ' ') << "blue ===> green:\n";
+        << string(LEN2, ' ') << "blue ===> green:\n";
     for (const auto &op : operators_[0])
-      streamer_master(rank()) << string(20, ' ') << op.first.first << ':'
+      streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.first << ':'
                               << op.first.second << '\n';
-    streamer_master(rank()) << string(15, ' ') << "green ===> blue:\n";
+    streamer_master(rank()) << string(LEN2, ' ') << "green ===> blue:\n";
     for (const auto &op : operators_[1])
-      streamer_master(rank()) << string(20, ' ') << op.first.second << ':'
+      streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.second << ':'
                               << op.first.first << '\n';
     if (profiling_)
       streamer_master(rank())
-          << string(15, ' ') << "time used: " << std::scientific << "min "
+          << string(LEN2, ' ') << "time used: " << std::scientific << "min "
           << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
           << '\n';
-    streamer_master(rank()) << '\n' << string(100, '-') << '\n';
+    streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
   }
 
   /// \brief begin to transfer data
@@ -525,14 +536,14 @@ public:
 
     using std::string;
 
-    streamer_master(rank()) << string(100, '-') << "\n\n"
-                            << string(15, ' ') << "transfer finished\n";
+    streamer_master(rank()) << string(LEN1, '-') << "\n\n"
+                            << string(LEN2, ' ') << "transfer finished\n";
     if (profiling_)
       streamer_master(rank())
-          << string(15, ' ') << "time used: " << std::scientific << "min "
+          << string(LEN2, ' ') << "time used: " << std::scientific << "min "
           << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
           << '\n';
-    streamer_master(rank()) << '\n' << string(100, '-') << '\n';
+    streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
   }
 
   ///@}
