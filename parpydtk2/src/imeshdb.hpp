@@ -25,21 +25,21 @@
 
 #pragma once
 
-#include <array>
-#include <vector>
-#include <limits>
 #include <algorithm>
+#include <array>
+#include <limits>
+#include <vector>
 
 #include "field.hpp"
 
 // trilinos
-#include <Teuchos_RCP.hpp>
 #include <DTK_MoabManager.hpp>
+#include <Teuchos_RCP.hpp>
 #include <Tpetra_MultiVector.hpp>
 
 // moab
-#include <moab/ParallelComm.hpp> // mpi.h in here
 #include <MBParallelConventions.h>
+#include <moab/ParallelComm.hpp>  // mpi.h in here
 
 namespace parpydtk2 {
 
@@ -59,7 +59,7 @@ class IMeshDB {
     handle_moab_error(ret);
     // get partiiton tag also
     int dv = -1;
-    ret    = mdb_.tag_get_handle(
+    ret = mdb_.tag_get_handle(
         PARALLEL_PARTITION_TAG_NAME, 1, moab::MB_TYPE_INTEGER, parttag_,
         ::moab::MB_TAG_CREAT | ::moab::MB_TAG_SPARSE, &dv);
     handle_moab_error(ret);
@@ -85,17 +85,13 @@ class IMeshDB {
     if (i < 0)
       for (auto &box : bboxes_) {
         int j = 0;
-        for (; j < 3; ++j)
-          box[j] = max_;
-        for (; j < 6; ++j)
-          box[j] = min_;
+        for (; j < 3; ++j) box[j] = max_;
+        for (; j < 6; ++j) box[j] = min_;
       }
     else {
       int j = 0;
-      for (; j < 3; ++j)
-        bboxes_[i][j] = max_;
-      for (; j < 6; ++j)
-        bboxes_[i][j] = min_;
+      for (; j < 3; ++j) bboxes_[i][j] = max_;
+      for (; j < 6; ++j) bboxes_[i][j] = min_;
     }
   }
 
@@ -103,22 +99,22 @@ class IMeshDB {
   inline void cmpt_bboxes_() {
     ::moab::ErrorCode ret;
     for (int i = 0; i < vsets_.size(); ++i) {
-      const auto &  vset = vsets_[i];
-      const int     sz   = size(i);
+      const auto &vset = vsets_[i];
+      const int sz = size(i);
       const double *X[3];
-      auto &        box = bboxes_[i];
-      ret               = mdb_.get_coords(vset, X[0], X[1], X[2]);
+      auto &box = bboxes_[i];
+      ret = mdb_.get_coords(vset, X[0], X[1], X[2]);
       int j = 0, k = 3, dir = 0;
       if (ret == ::moab::MB_SUCCESS) {
         // opt version
         for (; dir < 3; ++dir) {
           auto minmax = std::minmax_element(X[dir], X[dir] + sz);
-          box[j++]    = *minmax.first;
-          box[k++]    = *minmax.second;
+          box[j++] = *minmax.first;
+          box[k++] = *minmax.second;
         }
       } else {
         // loop 1by1
-        double               X[3];
+        double X[3];
         const ::moab::Range &vs = locals_[i];
         for (const auto &v : vs) {
           ret = mdb_.get_coords(&v, 1, X);
@@ -132,13 +128,18 @@ class IMeshDB {
     }
   }
 
-public:
+ public:
   /// \brief constructor with communicator
   /// \param[in] comm communicator
   explicit IMeshDB(MPI_Comm comm = MPI_COMM_WORLD)
-      : mdb_(), par_(new ::moab::ParallelComm(&mdb_, comm), true),
-        vsets_(1, root_set), locals_(1), bboxes_(1), gbboxes_(1),
-        created_(false), usergid_(false) {
+      : mdb_(),
+        par_(new ::moab::ParallelComm(&mdb_, comm), true),
+        vsets_(1, root_set),
+        locals_(1),
+        bboxes_(1),
+        gbboxes_(1),
+        created_(false),
+        usergid_(false) {
     init_();
     init_bbox_(0);
   }
@@ -169,7 +170,7 @@ public:
 
   /// \brief create a new vertex set
   inline void create_vset() {
-    entity_t          vset;
+    entity_t vset;
     ::moab::ErrorCode ret = mdb_.create_meshset(moab::MESHSET_SET, vset);
     handle_moab_error(ret);
     vsets_.emplace_back(vset);
@@ -186,7 +187,7 @@ public:
   inline void create_vertices(int nv, const double *coords,
                               unsigned set_id = 0u) {
     throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    ::moab::Range     verts;
+    ::moab::Range verts;
     ::moab::ErrorCode ret = mdb_.create_vertices(coords, nv, verts);
     handle_moab_error(ret);
     locals_[set_id].merge(verts);
@@ -232,7 +233,7 @@ public:
       show_warning_if(!usergid_ && (ranks() > 1),
                       "critical!! Global IDs are missing!");
     }
-    if (rank() > 1) {
+    if (ranks() > 1) {
       // this probably does nothing
       for (const auto &vset : vsets_) {
         ::moab::ErrorCode ret = par_->resolve_shared_ents(vset, 0, 0);
@@ -240,18 +241,61 @@ public:
       }
     }
 
+    // NOTE the following part is to resolve the empty partition issues
+    // with DTK, we assign a dummy nodes
+    if (rank() == 0)
+      for (const auto &vset : vsets_)
+        throw_error_if(locals_[vset].size() == 0,
+                       "master process cannot have empty partition!");
+    for (const auto &vset : vsets_) {
+      const entity_t first = locals_[vset][0];
+      double dup_coord_and_gid[4];  // encode together
+      if (rank() == 0) {
+        ::moab::ErrorCode ret = mdb_.get_coords(&first, 1, dup_coord_and_gid);
+        handle_moab_error(ret);
+        // get global id
+        int dup_gid;
+        ret = mdb_.tag_get_data(gidtag_, &first, 1, &dup_gid);
+        handle_moab_error(ret);
+        dup_coord_and_gid[3] = dup_gid;
+      }
+      if (ranks() > 1) {
+        // bcast
+        int ret = MPI_Bcast(dup_coord_and_gid, 4, MPI_DOUBLE, 0, par_->comm());
+        if (ret != MPI_SUCCESS) {
+          // NOTE that the default handler in mpi will directly abort, as a
+          // mapper we will not modify the mpi handler (this should be the task
+          // of application codes)
+          char msg[MPI_MAX_ERROR_STRING];
+          int dummy, err_cls;
+          MPI_Error_string(ret, msg, &dummy);
+          MPI_Error_class(ret, &err_cls);
+          std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                    << ", error_class: " << err_cls << ", msg: " << msg
+                    << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                    << __FILE__ << "():" << __LINE__ << '\n';
+          MPI_Abort(MPI_COMM_WORLD, ret);
+        }
+        // check if "my" mesh is empty
+        if (locals_[vset].size() == 0) {
+          create_vertices(1, dup_coord_and_gid, vset);
+          const int dup_gid = dup_coord_and_gid[3];
+          assign_gids(1, &dup_gid, vset);
+        }
+      }
+    }
+
     // assign partition based on processes, is this needed in DTK?
     for (const auto &vset : vsets_) {
-      int               rk  = rank();
+      int rk = rank();
       ::moab::ErrorCode ret = mdb_.tag_set_data(parttag_, &vset, 1, &rk);
       handle_moab_error(ret);
     }
 
     // assign some values ot fields
     std::vector<double> values;
-    int                 dim = 1;
-    for (const auto &field : fields_)
-      dim = std::max(dim, field.second->dim());
+    int dim = 1;
+    for (const auto &field : fields_) dim = std::max(dim, field.second->dim());
     for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
       values.resize(size(set_id) * dim, 0.0);
       for (auto &field : fields_)
@@ -263,9 +307,9 @@ public:
       mngrs_.emplace_back(par_, vsets_[set_id], false);
     }
     for (const auto &field : fields_) {
-      const std::string &name   = *field.second;
-      const ::moab::Tag &tag    = field.second->tag();
-      int                set_id = field.second->set();
+      const std::string &name = *field.second;
+      const ::moab::Tag &tag = field.second->tag();
+      int set_id = field.second->set();
       dtkfields_.emplace(std::make_pair(
           name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
                                            vsets_[set_id], tag))));
@@ -277,19 +321,17 @@ public:
     // compute global bounding boxes
     if (ranks() == 1) {
       for (int i = 0; i < bboxes_.size(); ++i)
-        for (int j = 0; j < 6; ++j)
-          gbboxes_[i][j] = bboxes_[i][j];
+        for (int j = 0; j < 6; ++j) gbboxes_[i][j] = bboxes_[i][j];
     } else {
       // copy all local first
-      for (int i = 0; i < bboxes_.size(); ++i)
-        gbboxes_[i] = bboxes_[i];
+      for (int i = 0; i < bboxes_.size(); ++i) gbboxes_[i] = bboxes_[i];
       // communication needed
-      const int           box_len = bboxes_.size() * 6;
+      const int box_len = bboxes_.size() * 6;
       std::vector<double> buffer(box_len * ranks());
-      double *            sendbuffer;
-      bool                can_free = false;
+      double *sendbuffer;
+      bool can_free = false;
       if (bboxes_.size() > 1) {
-        sendbuffer  = new double[box_len];
+        sendbuffer = new double[box_len];
         double *pos = sendbuffer;
         for (const auto &box : bboxes_)
           pos = std::copy(box.cbegin(), box.cend(), pos);
@@ -299,14 +341,13 @@ public:
       // allgather
       int ret = MPI_Allgather(sendbuffer, box_len, MPI_DOUBLE, buffer.data(),
                               box_len, MPI_DOUBLE, par_->comm());
-      if (can_free)
-        delete[] sendbuffer;
+      if (can_free) delete[] sendbuffer;
       if (ret != MPI_SUCCESS) {
         // NOTE that the default handler in mpi will directly abort, as a
         // mapper we will not modify the mpi handler (this should be the task
         // of application codes)
         char msg[MPI_MAX_ERROR_STRING];
-        int  dummy, err_cls;
+        int dummy, err_cls;
         MPI_Error_string(ret, msg, &dummy);
         MPI_Error_class(ret, &err_cls);
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
@@ -318,8 +359,8 @@ public:
 
       // compute the global bounding boxes
       for (int i = 0; i < gbboxes_.size(); ++i) {
-        auto &    gbox = gbboxes_[i];
-        const int ld   = i * 6;
+        auto &gbox = gbboxes_[i];
+        const int ld = i * 6;
         for (int j = 0; j < ranks(); ++j)
           for (int k = 0; k < 3; ++k) {
             gbox[k] = std::min(gbox[k], buffer[box_len * j + ld + k]);
@@ -346,8 +387,7 @@ public:
   inline void get_bbox(double *v, unsigned set_id = 0u) const {
     throw_error_if(set_id >= vsets_.size(), "exceed set count");
     const auto &box = bboxes_[set_id];
-    for (int i = 0; i < 6; ++i)
-      v[i] = box[i];
+    for (int i = 0; i < 6; ++i) v[i] = box[i];
   }
 
   /// \brief get global bounding box
@@ -356,8 +396,7 @@ public:
   inline void get_gbbox(double *v, unsigned set_id = 0u) const {
     throw_error_if(set_id >= vsets_.size(), "exceed set count");
     const auto &box = gbboxes_[set_id];
-    for (int i = 0; i < 6; ++i)
-      v[i] = box[i];
+    for (int i = 0; i < 6; ++i) v[i] = box[i];
   }
 
   /// \brief create a field
@@ -380,13 +419,13 @@ public:
   /// \brief check field dimension
   /// \param[in] field_name field name
   inline int field_dim(const std::string &field_name) const {
-    return fields_[field_name].dim(); // operator[] throws
+    return fields_[field_name].dim();  // operator[] throws
   }
 
   /// \brief check field set id
   /// \param[in] field_name field name
   inline int field_set_id(const std::string &field_name) const {
-    return fields_[field_name].set(); // operator[] throws
+    return fields_[field_name].set();  // operator[] throws
   }
 
   /// \brief assign a value to a field
@@ -398,7 +437,7 @@ public:
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].assign(locals_[set_id], values); // operator[] throws
+    fields_[field_name].assign(locals_[set_id], values);  // operator[] throws
   }
 
   /// \brief extract value
@@ -410,7 +449,7 @@ public:
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].extract(locals_[set_id], values); // operator[] throws
+    fields_[field_name].extract(locals_[set_id], values);  // operator[] throws
   }
 
   ///@}
@@ -431,7 +470,7 @@ public:
   /// \brief check if ready
   inline bool ready() const noexcept { return created_; }
 
-protected:
+ protected:
   /// \brief moab instance
   ::moab::Core mdb_;
 
@@ -445,10 +484,10 @@ protected:
   std::vector<moab::Range> locals_;
 
   /// \brief bounding boxes
-  std::vector<std::array<double, 6> > bboxes_;
+  std::vector<std::array<double, 6>> bboxes_;
 
   /// \brief global bounding boxes
-  std::vector<std::array<double, 6> > gbboxes_;
+  std::vector<std::array<double, 6>> gbboxes_;
 
   /// \brief field data set
   FieldDataSet fields_;
@@ -469,15 +508,15 @@ protected:
   typedef std::unordered_map<
       std::string,
       std::pair<int, Teuchos::RCP<Tpetra::MultiVector<
-                         double, int, DataTransferKit::SupportId> > > >
+                         double, int, DataTransferKit::SupportId>>>>
       dtk_field_t;
 
   /// \brief DTK multi vector for MOAB tags
   dtk_field_t dtkfields_;
 
-public:
+ public:
   /// \brief get the dtk fields
   inline dtk_field_t &dtk_fields() noexcept { return dtkfields_; }
 };
 
-} // namespace parpydtk2
+}  // namespace parpydtk2
