@@ -8,14 +8,12 @@ cimport numpy as cnp
 from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 from libcpp.string cimport string as std_string
-from mpi4py cimport MPI
+from mpi4py cimport MPI as c_MPI
+from mpi4py cimport libmpi as mpi
 
 # normal imports
 import numpy as np
 import mpi4py
-mpi4py.rc.initialize = False
-mpi4py.rc.finalize = False
-from mpi4py import MPI
 import datetime
 from ._version import __version__
 
@@ -49,11 +47,11 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
 
     cdef cppclass _Mapper 'parpydtk2::Mapper':
-        _Mapper(MPI.MPI_Comm comm, const std_string &version,
+        _Mapper(c_MPI.MPI_Comm comm, const std_string &version,
             const std_string &date, bool profiling) except +
         int ranks()
         int rank()
-        MPI.MPI_Comm comm()
+        c_MPI.MPI_Comm comm()
         void set_dimension(int dim) except +
         void use_mmls()
         void use_spline()
@@ -369,16 +367,20 @@ cdef class Mapper:
     cdef _Mapper *mp
 
     # dummpy contructor for doc
-    def __init__(self, comm=MPI.COMM_WORLD, profiling=True):
+    def __init__(self, comm=None, profiling=True):
         pass
 
-    def __cinit__(self, MPI.Comm comm=MPI.COMM_WORLD, profiling=True):
+    def __cinit__(self, comm=None, profiling=True):
         cdef:
             std_string version = __version__.encode('UTF-8')
             std_string date = \
                 datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').encode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
-            cdef MPI.MPI_Comm comm_ = <MPI.MPI_Comm> comm.ob_mpi
+            cdef c_MPI.MPI_Comm comm_
+        if comm is None:
+            comm_ = mpi.MPI_COMM_WORLD
+        else:
+            comm_ = <c_MPI.MPI_Comm> comm.ob_mpi
         self.mp = new _Mapper(comm_, version, date, prof)
 
     def __dealloc__(self):
@@ -414,7 +416,7 @@ cdef class Mapper:
         :attr:`ranks` : get the total communicator size
         :attr:`rank` : "my" rank
         """
-        return <MPI.Comm> self.mp.comm()
+        return <c_MPI.Comm> self.mp.comm()
 
     @property
     def dimension(self):
