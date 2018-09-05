@@ -46,7 +46,7 @@ package_data = {
         '*.pxd',
         '*.pyx',
         '*.cpp',
-        '*.h',
+        '*.hpp',
         os.path.join('src', '*.hpp'),
     ]
 }
