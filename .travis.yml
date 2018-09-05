@@ -1,0 +1,19 @@
+os: linux
+dist: trusty
+language: python
+services: docker
+
+branches:
+  only:
+  - parallel
+
+env:
+  global:
+    - BASE=unifem/cht-coupler:mapper-dev
+
+before_script:
+  - docker --version
+  - docker pull $BASE
+
+script:
+  - docker build --file docker/Dockerfile .
