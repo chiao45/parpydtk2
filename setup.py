@@ -75,8 +75,10 @@ def ensure_cpp11():
     try:
         cmp.compile([tmp_source], extra_postargs=['-std=c++11'])
         safe_remove(tmp_source)
+        safe_remove(tempfile.gettempprefix)
     except distutils.errors.CompileError:
         safe_remove(tmp_source)
+        safe_remove(tempfile.gettempprefix)
         sys.stderr.write('You must use a compiler that supports C++11\n')
         sys.stderr.flush()
         sys.exit(-1)
