@@ -11,6 +11,13 @@ from libcpp.string cimport string as std_string
 from mpi4py cimport MPI as c_MPI
 from mpi4py cimport libmpi as mpi
 
+ctypedef c_MPI.Comm comm_t
+ctypedef mpi.MPI_Comm c_comm_t
+
+
+cdef extern from 'mpi-compat.hpp':
+    pass
+
 # normal imports
 import numpy as np
 import mpi4py
@@ -27,6 +34,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
 
     cdef cppclass _IMeshDB 'parpydtk2::IMeshDB':
+        _IMeshDB(c_comm_t comm) except +
         void begin_create() except +
         void create_vset() except +
         void create_vertices(int nv, const double *coords, unsigned set_id) except +
@@ -47,11 +55,11 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
 
     cdef cppclass _Mapper 'parpydtk2::Mapper':
-        _Mapper(c_MPI.MPI_Comm comm, const std_string &version,
+        _Mapper(c_comm_t comm, const std_string &version,
             const std_string &date, bool profiling) except +
         int ranks()
         int rank()
-        c_MPI.MPI_Comm comm()
+        c_comm_t comm()
         void set_dimension(int dim) except +
         void use_mmls()
         void use_spline()
@@ -84,16 +92,25 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
 cdef class IMeshDB:
     cdef _IMeshDB *mdb
+    cdef comm_t comm
 
     # dummy constructor for doc
-    def __init__(self):
+    def __init__(self, comm=None):
         pass
 
-    def __cinit__(self):
-        self.mdb = NULL
+    def __cinit__(self, comm_t comm=None):
+        cdef c_comm_t comm_ = mpi.MPI_COMM_WORLD if comm is None else comm.ob_mpi
+        self.comm = c_MPI.Comm()
+        self.comm.ob_mpi = comm_
+        self.mdb = new _IMeshDB(comm_)
 
     def __dealloc__(self):
-        pass
+        del self.mdb
+
+    @property
+    def comm(self):
+        """MPI.Comm: communicator"""
+        return self.comm
 
     def begin_create(self):
         """Begin to create/manupilate the mesh
@@ -370,17 +387,17 @@ cdef class Mapper:
     def __init__(self, comm=None, profiling=True):
         pass
 
-    def __cinit__(self, comm=None, profiling=True):
+    def __cinit__(self, comm_t comm=None, profiling=True):
         cdef:
             std_string version = __version__.encode('UTF-8')
             std_string date = \
                 datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').encode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
-            cdef c_MPI.MPI_Comm comm_
+            c_comm_t comm_
         if comm is None:
             comm_ = mpi.MPI_COMM_WORLD
         else:
-            comm_ = <c_MPI.MPI_Comm> comm.ob_mpi
+            comm_ = comm.ob_mpi
         self.mp = new _Mapper(comm_, version, date, prof)
 
     def __dealloc__(self):
@@ -416,7 +433,10 @@ cdef class Mapper:
         :attr:`ranks` : get the total communicator size
         :attr:`rank` : "my" rank
         """
-        return <c_MPI.Comm> self.mp.comm()
+        cdef c_comm_t comm_ = self.mp.comm()
+        cdef comm_t comm = c_MPI.Comm()
+        comm.ob_mpi = comm_
+        return comm
 
     @property
     def dimension(self):
