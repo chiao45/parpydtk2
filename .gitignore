@@ -46,3 +46,4 @@ test_foo.py
 test_bar.py
 test_spam.py
 .vscode
+.ycm_extra_conf.py
