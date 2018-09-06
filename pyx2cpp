@@ -21,8 +21,10 @@ def main():
     import sys
     import mpi4py
     cy = get_cython()
-    subprocess.call([cy, '-I' + mpi4py.get_include(), '--cplus',
-                     'parpydtk2/mapper.pyx'] + sys.argv[1:])
+    srcs = ['imeshdb.pyx', 'mapper.pyx']
+    for src in srcs:
+        subprocess.call([cy, '-I' + mpi4py.get_include(), '--cplus',
+                         'parpydtk2/{}'.format(src)] + sys.argv[1:])
 
 
 if __name__ == '__main__':
