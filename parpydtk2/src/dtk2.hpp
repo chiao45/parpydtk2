@@ -482,8 +482,7 @@ class Mapper {
     if (profiling_)
       streamer_master(rank())
           << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-          << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
-          << '\n';
+          << min_ << ", max " << max_ << ", avg " << avg << '\n';
     streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
   }
 
@@ -548,8 +547,7 @@ class Mapper {
     if (profiling_)
       streamer_master(rank())
           << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-          << min_ << ", max " << max_ << ", avg " << avg << std::defaultfloat
-          << '\n';
+          << min_ << ", max " << max_ << ", avg " << avg << '\n';
     streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
   }
 
