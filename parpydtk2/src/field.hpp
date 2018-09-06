@@ -35,23 +35,20 @@ namespace parpydtk2 {
 /// \class FieldData
 /// \brief a representation of MOAB tag for field data
 class FieldData {
-public:
+ public:
   FieldData() = delete;
 
   /// \brief constructor with moab instance
   /// \param[in] mdb moab instance
   /// \param[in] field_name field name
-  /// \param[in] set mesh set number
   /// \param[in] dim field dimension
   /// \note \a set is not the same as mesh set in MOAB
-  FieldData(::moab::Core &mdb, const std::string &field_name, int set,
-            int dim = 1)
-      : mdb_(mdb), fn_(field_name), set_(set), dim_(dim) {
+  FieldData(::moab::Core &mdb, const std::string &field_name, int dim = 1)
+      : mdb_(mdb), fn_(field_name), set_(0), dim_(dim) {
     ::moab::ErrorCode ret;
     // create tag
     double dv[dim];
-    for (int i = 0; i < dim; ++i)
-      dv[i] = 0.0;
+    for (int i = 0; i < dim; ++i) dv[i] = 0.0;
     ret = mdb_.tag_get_handle(fn_.c_str(), dim_, moab::MB_TYPE_DOUBLE, tag_,
                               ::moab::MB_TAG_DENSE | ::moab::MB_TAG_CREAT, dv);
     if (ret == ::moab::MB_ALREADY_ALLOCATED) {
@@ -72,6 +69,18 @@ public:
     handle_moab_error(ret);
   }
 
+  /// \brief assign to first node
+  ///
+  /// This function is used by Python for handling empty partitions
+  ///
+  /// \param[in] ranges entity ranges
+  /// \param[in] values values for the first node, at least size of dim
+  inline void assign_1st(const ::moab::Range &range, const double *values) {
+    const entity_t first = range[0];
+    ::moab::ErrorCode ret = mdb_.tag_set_data(tag_, &first, 1, values);
+    handle_moab_error(ret);
+  }
+
   /// \brief extract values
   /// \param[in] ranges entity ranges, for this work, it should be vertices
   /// \param[out] values data values, for vector/tensor, C order is expected
@@ -81,7 +90,16 @@ public:
     handle_moab_error(ret);
   }
 
-  /// brief implciitly cast to string
+  /// \brief extract the value from the first node
+  /// \param[in] ranges entity ranges
+  /// \param[out] values values for the first node, at least size of dim
+  inline void extract_1st(const ::moab::Range &range, double *values) const {
+    const entity_t first = range[0];
+    moab::ErrorCode ret = mdb_.tag_get_data(tag_, &first, 1, values);
+    handle_moab_error(ret);
+  }
+
+  /// brief implicitly cast to string
   inline operator const std::string &() const noexcept { return fn_; }
 
   /// \brief check the dimension
@@ -93,7 +111,7 @@ public:
   /// \brief get MOAB tag
   inline const ::moab::Tag &tag() const noexcept { return tag_; }
 
-protected:
+ protected:
   /// \brief reference to moab instance
   ::moab::Core &mdb_;
 
@@ -113,10 +131,10 @@ protected:
 /// \class FieldDataSet
 /// \brief a set of field data
 class FieldDataSet
-    : public std::unordered_map<std::string, std::unique_ptr<FieldData> > {
-  typedef std::unordered_map<std::string, std::unique_ptr<FieldData> > base_t;
+    : public std::unordered_map<std::string, std::unique_ptr<FieldData>> {
+  typedef std::unordered_map<std::string, std::unique_ptr<FieldData>> base_t;
 
-public:
+ public:
   /// \brief check if a field exist
   /// \param[in] fn field name
   inline bool has_field(const std::string &fn) const noexcept {
@@ -126,14 +144,13 @@ public:
   /// \brief create an data field
   /// \param[in] mdb moab data base
   /// \param[in] field_name field name
-  /// \param[in] set mesh set number
   /// \param[in] dim field dimension
   /// \note \a set is not the same as mesh set in MOAB
-  inline void create(::moab::Core &mdb, const std::string &field_name, int set,
+  inline void create(::moab::Core &mdb, const std::string &field_name,
                      int dim = 1) {
     // use move
     base_t::emplace(
-        std::make_pair(field_name, new FieldData(mdb, field_name, set, dim)));
+        std::make_pair(field_name, new FieldData(mdb, field_name, dim)));
   }
 
   /// \brief get a reference to a field data
@@ -158,4 +175,4 @@ public:
   }
 };
 
-} // namespace parpydtk2
+}  // namespace parpydtk2

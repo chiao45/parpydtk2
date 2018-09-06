@@ -57,7 +57,7 @@ class IMeshDB {
     ret = mdb_.tag_get_handle(PARALLEL_GID_TAG_NAME, 1, moab::MB_TYPE_INTEGER,
                               gidtag_);
     handle_moab_error(ret);
-    // get partiiton tag also
+    // get partition tag also
     int dv = -1;
     ret = mdb_.tag_get_handle(
         PARALLEL_PARTITION_TAG_NAME, 1, moab::MB_TYPE_INTEGER, parttag_,
@@ -98,9 +98,9 @@ class IMeshDB {
   /// \brief compute all bounding box
   inline void cmpt_bboxes_() {
     ::moab::ErrorCode ret;
-    for (int i = 0; i < vsets_.size(); ++i) {
+    for (int i = 0; i < (int)vsets_.size(); ++i) {
       const auto &vset = vsets_[i];
-      const int sz = size(i);
+      const int sz = size();
       const double *X[3];
       auto &box = bboxes_[i];
       ret = mdb_.get_coords(vset, X[0], X[1], X[2]);
@@ -139,7 +139,9 @@ class IMeshDB {
         bboxes_(1),
         gbboxes_(1),
         created_(false),
-        usergid_(false) {
+        usergid_(false),
+        empty_(false),
+        has_empty_(false) {
     init_();
     init_bbox_(0);
   }
@@ -151,6 +153,9 @@ class IMeshDB {
 
   /// \brief get my rank
   inline int rank() const noexcept { return par_->rank(); }
+
+  /// \brief get the communicator
+  inline MPI_Comm comm() const noexcept { return par_->comm(); }
 
   /// \brief get mesh
   ::Teuchos::RCP<moab::ParallelComm> pcomm() const noexcept { return par_; }
@@ -169,6 +174,7 @@ class IMeshDB {
   }
 
   /// \brief create a new vertex set
+  /// \deprecated No longer supports sets
   inline void create_vset() {
     entity_t vset;
     ::moab::ErrorCode ret = mdb_.create_meshset(moab::MESHSET_SET, vset);
@@ -183,28 +189,39 @@ class IMeshDB {
   /// \brief create vertices
   /// \param[in] nv number of vertices
   /// \param[in] coords coords values
-  /// \param[in] set_id set ID
-  inline void create_vertices(int nv, const double *coords,
-                              unsigned set_id = 0u) {
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
+  inline void create_vertices(int nv, const double *coords) {
     ::moab::Range verts;
     ::moab::ErrorCode ret = mdb_.create_vertices(coords, nv, verts);
     handle_moab_error(ret);
-    locals_[set_id].merge(verts);
+    locals_[0].merge(verts);
+  }
+
+  /// \brief extract assigned coordinates
+  /// \param[out] coords coordinates
+  /// \note coords must be at least n*3 where n is the size of the mesh
+  inline void extract_vertices(double *coords) const {
+    ::moab::ErrorCode ret = mdb_.get_coords(locals_[0], coords);
+    handle_moab_error(ret);
   }
 
   /// \brief assign global IDs
   /// \param[in] nv number of local vertices
   /// \param[in] gids global IDs
-  /// \param[in] set_id set ID
   /// \note \a gids should be one-based indices
-  inline void assign_gids(int nv, const int *gids, unsigned set_id = 0u) {
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    show_warning_if(nv != locals_[set_id].size(),
+  inline void assign_gids(int nv, const int *gids) {
+    show_warning_if((entity_t)nv != locals_[0].size(),
                     "global ID size and vertex size do not match");
-    moab::ErrorCode ret = mdb_.tag_set_data(gidtag_, locals_[set_id], gids);
+    moab::ErrorCode ret = mdb_.tag_set_data(gidtag_, locals_[0], gids);
     handle_moab_error(ret);
     usergid_ = true;
+  }
+
+  /// \brief extract global IDs
+  /// \param[out] gids global IDs
+  inline void extract_gids(int *gids) const {
+    moab::ErrorCode ret =
+        mdb_.tag_get_data(gidtag_, locals_[0], reinterpret_cast<void *>(gids));
+    handle_moab_error(ret);
   }
 
   /// \brief finish manupilating the mesh
@@ -278,11 +295,42 @@ class IMeshDB {
         }
         // check if "my" mesh is empty
         if (locals_[vset].size() == 0) {
-          create_vertices(1, dup_coord_and_gid, vset);
+          create_vertices(1, dup_coord_and_gid);
           const int dup_gid = dup_coord_and_gid[3];
-          assign_gids(1, &dup_gid, vset);
+          assign_gids(1, &dup_gid);
+          empty_ = true;
+        } else
+          empty_ = false;
+
+        // now notice all procs about empty partition information
+        std::vector<int> empty_flags(ranks());
+        int my_status = empty_;
+        ret = MPI_Allgather(&my_status, 1, MPI_INT, empty_flags.data(), 1,
+                            MPI_INT, comm());
+        if (ret != MPI_SUCCESS) {
+          // NOTE that the default handler in mpi will directly abort, as a
+          // mapper we will not modify the mpi handler (this should be the task
+          // of application codes)
+          char msg[MPI_MAX_ERROR_STRING];
+          int dummy, err_cls;
+          MPI_Error_string(ret, msg, &dummy);
+          MPI_Error_class(ret, &err_cls);
+          std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                    << ", error_class: " << err_cls << ", msg: " << msg
+                    << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                    << __FILE__ << "():" << __LINE__ << '\n';
+          MPI_Abort(MPI_COMM_WORLD, ret);
         }
-      }
+        int counts = std::count(empty_flags.cbegin(), empty_flags.cend(), 1);
+        has_empty_ = counts > 0;
+        if (has_empty_ && rank() == 0) {
+          m2s_.reserve(counts);
+          for (int i = 0, N = (int)empty_flags.size(); i < N; ++i)
+            if (empty_flags[i]) m2s_.push_back(i);
+        }
+
+      } else
+        empty_ = false;
     }
 
     // assign partition based on processes, is this needed in DTK?
@@ -297,7 +345,7 @@ class IMeshDB {
     int dim = 1;
     for (const auto &field : fields_) dim = std::max(dim, field.second->dim());
     for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
-      values.resize(size(set_id) * dim, 0.0);
+      values.resize(size() * dim, 0.0);
       for (auto &field : fields_)
         field.second->assign(locals_[set_id], values.data());
     }
@@ -320,11 +368,11 @@ class IMeshDB {
 
     // compute global bounding boxes
     if (ranks() == 1) {
-      for (int i = 0; i < bboxes_.size(); ++i)
+      for (int i = 0; i < (int)bboxes_.size(); ++i)
         for (int j = 0; j < 6; ++j) gbboxes_[i][j] = bboxes_[i][j];
     } else {
       // copy all local first
-      for (int i = 0; i < bboxes_.size(); ++i) gbboxes_[i] = bboxes_[i];
+      for (int i = 0; i < (int)bboxes_.size(); ++i) gbboxes_[i] = bboxes_[i];
       // communication needed
       const int box_len = bboxes_.size() * 6;
       std::vector<double> buffer(box_len * ranks());
@@ -358,7 +406,7 @@ class IMeshDB {
       }
 
       // compute the global bounding boxes
-      for (int i = 0; i < gbboxes_.size(); ++i) {
+      for (int i = 0; i < (int)gbboxes_.size(); ++i) {
         auto &gbox = gbboxes_[i];
         const int ld = i * 6;
         for (int j = 0; j < ranks(); ++j)
@@ -371,43 +419,43 @@ class IMeshDB {
     }
   }
 
-  /// \brief check mesh size
-  /// \param[in] set_id set ID
-  inline int size(unsigned set_id = 0u) const {
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    return locals_[set_id].size();
-  }
+  /// \brief check if empty partition
+  inline bool empty() const noexcept { return empty_; }
 
-  /// \brief check the set number
-  inline int sets() const noexcept { return vsets_.size(); }
+  /// \brief check if any of the process has an empty partition
+  inline bool has_empty() const noexcept { return has_empty_; }
+
+  /// \brief get a reference to the m2s pattern
+  /// \note This is used in Python level as "private" thus having "_"
+  inline const std::vector<int> &_m2s() const noexcept { return m2s_; }
+
+  /// \brief check mesh size
+  inline int size() const noexcept { return locals_[0].size(); }
 
   /// \brief get bounding box
   /// \param[out] v values
   /// \param[in] set_id set ID
-  inline void get_bbox(double *v, unsigned set_id = 0u) const {
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    const auto &box = bboxes_[set_id];
+  inline void get_bbox(double *v) const noexcept {
+    const auto &box = bboxes_[0];
     for (int i = 0; i < 6; ++i) v[i] = box[i];
   }
 
   /// \brief get global bounding box
   /// \param[out] v values
-  /// \param[in] set_id set ID
-  inline void get_gbbox(double *v, unsigned set_id = 0u) const {
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    const auto &box = gbboxes_[set_id];
+  inline void get_gbbox(double *v) const noexcept {
+    const auto &box = gbboxes_[0];
     for (int i = 0; i < 6; ++i) v[i] = box[i];
   }
 
   /// \brief create a field
   /// \param[in] field_name field name
-  /// \param[in] set_id set ID
   /// \param[in] dim field dimension
-  inline void create_field(const std::string &field_name, unsigned set_id = 0u,
-                           int dim = 1) {
+  inline void create_field(const std::string &field_name, int dim = 1) {
     throw_error_if(dim < 1, "invalid field dimension");
-    throw_error_if(set_id >= vsets_.size(), "exceed set count");
-    fields_.create(mdb_, field_name, set_id, dim);
+    throw_error_if(
+        created_,
+        "you cannot create fields one a IMeshDB is marked as created!");
+    fields_.create(mdb_, field_name, dim);
   }
 
   /// \brief check if we have a field
@@ -422,34 +470,49 @@ class IMeshDB {
     return fields_[field_name].dim();  // operator[] throws
   }
 
-  /// \brief check field set id
-  /// \param[in] field_name field name
-  inline int field_set_id(const std::string &field_name) const {
-    return fields_[field_name].set();  // operator[] throws
-  }
-
   /// \brief assign a value to a field
   /// \param[in] field_name field name
   /// \param[in] values field data values
-  /// \param[in] set_id set ID
-  inline void assign_field(const std::string &field_name, const double *values,
-                           unsigned set_id = 0u) {
+  inline void assign_field(const std::string &field_name,
+                           const double *values) {
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].assign(locals_[set_id], values);  // operator[] throws
+    fields_[field_name].assign(locals_[0], values);  // operator[] throws
+  }
+
+  /// \brief assign to the first node
+  /// \param[in] field_name field name
+  /// \param[in] values field data values, at least size of field dimension
+  ///
+  /// This function is used by Python to resolve the issues when empty
+  /// empty partitions happen. Therefore, this function has an "_" prefix to
+  /// indicate "private" usage!
+  inline void _assign_1st(const std::string &field_name, const double *values) {
+    fields_[field_name].assign_1st(locals_[0], values);  // operator[] throws
   }
 
   /// \brief extract value
   /// \param[in] field_name field name
   /// \param[out] values field data values
-  /// \param[in] set_id set ID
-  inline void extract_field(const std::string &field_name, double *values,
-                            unsigned set_id = 0u) const {
+  inline void extract_field(const std::string &field_name,
+                            double *values) const {
     throw_error_if(!created_,
                    "you cannot assign/extract values on a incomplete mesh.. "
                    "did you forget to call finish_create?");
-    fields_[field_name].extract(locals_[set_id], values);  // operator[] throws
+    fields_[field_name].extract(locals_[0], values);  // operator[] throws
+  }
+
+  /// \brief extract first value
+  /// \param[in] field_name field name
+  /// \param[out] values field data values
+  ///
+  /// This function is used by Python to resolve the issues when empty
+  /// empty partitions happen. Therefore, this function has an "_" prefix to
+  /// indicate "private" usage!
+  inline void _extract_1st(const std::string &field_name,
+                           double *values) const {
+    fields_[field_name].extract_1st(locals_[0], values);  // operator[] throws
   }
 
   ///@}
@@ -513,6 +576,15 @@ class IMeshDB {
 
   /// \brief DTK multi vector for MOAB tags
   dtk_field_t dtkfields_;
+
+  /// \brief check empty partition
+  bool empty_;
+
+  /// \brief check if any process is empty
+  bool has_empty_;
+
+  /// \brief comm pattern for master2slaves for handling empty partitions
+  std::vector<int> m2s_;
 
  public:
   /// \brief get the dtk fields
