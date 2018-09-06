@@ -51,3 +51,6 @@ dist
 *.egg-info
 tmp
 _build
+html
+latex
+xml
