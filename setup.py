@@ -2,8 +2,8 @@ from distutils.command.clean import clean
 import os
 import sys
 import re
-import numpy
 import codecs
+import numpy
 from setuptools import setup, Extension, find_packages
 try:
     import mpi4py
@@ -75,10 +75,10 @@ def ensure_cpp11():
     try:
         cmp.compile([tmp_source], extra_postargs=['-std=c++11'])
         safe_remove(tmp_source)
-        safe_remove(tempfile.gettempprefix)
+        safe_remove(tempfile.gettempprefix())
     except distutils.errors.CompileError:
         safe_remove(tmp_source)
-        safe_remove(tempfile.gettempprefix)
+        safe_remove(tempfile.gettempprefix())
         sys.stderr.write('You must use a compiler that supports C++11\n')
         sys.stderr.flush()
         sys.exit(-1)
@@ -161,16 +161,27 @@ if MOAB is None or DTK is None:
 
 rpath = library_dirs
 
-ext = Extension(
-    'parpydtk2.mapper',
-    ['parpydtk2/mapper.cpp'],
-    include_dirs=include_dirs,
-    language='c++',
-    libraries=libraries,
-    library_dirs=library_dirs,
-    runtime_library_dirs=rpath,
-    define_macros=[('LEN1', LEN1), ('LEN2', LEN2)]
-)
+exts = [
+    Extension(
+        'parpydtk2.imeshdb',
+        ['parpydtk2/imeshdb.cpp'],
+        include_dirs=include_dirs,
+        language='c++',
+        libraries=libraries,
+        library_dirs=library_dirs,
+        runtime_library_dirs=rpath
+    ),
+    Extension(
+        'parpydtk2.mapper',
+        ['parpydtk2/mapper.cpp'],
+        include_dirs=include_dirs,
+        language='c++',
+        libraries=libraries,
+        library_dirs=library_dirs,
+        runtime_library_dirs=rpath,
+        define_macros=[('LEN1', LEN1), ('LEN2', LEN2)]
+    )
+]
 
 
 class MyClean(clean):
@@ -201,7 +212,7 @@ setup(
     url='https://github.com/chiao45/parpydtk2',
     packages=find_packages(),
     license='MIT',
-    ext_modules=[ext],
+    ext_modules=exts,
     classifiers=classifiers,
     cmdclass={'clean': MyClean},
     install_requires=install_requires,
