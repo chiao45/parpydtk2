@@ -50,3 +50,4 @@ test_spam.py
 dist
 *.egg-info
 tmp
+_build
