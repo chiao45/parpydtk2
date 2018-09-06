@@ -109,10 +109,10 @@ library_dirs = None
 
 def configure_lib(env):
     # check env
-    moab_root = os.environ.get(env, None)
-    if moab_root is not None:
-        return ([os.path.join(moab_root, 'include')],
-                [os.path.join(moab_root, 'lib')])
+    root = os.environ.get(env, None)
+    if root is not None:
+        return ([os.path.join(root, 'include')],
+                [os.path.join(root, 'lib')])
     return None
 
 
@@ -169,7 +169,8 @@ exts = [
         language='c++',
         libraries=libraries,
         library_dirs=library_dirs,
-        runtime_library_dirs=rpath
+        runtime_library_dirs=rpath,
+        extra_compile_args=['-std=c++11'],
     ),
     Extension(
         'parpydtk2.mapper',
@@ -179,7 +180,8 @@ exts = [
         libraries=libraries,
         library_dirs=library_dirs,
         runtime_library_dirs=rpath,
-        define_macros=[('LEN1', LEN1), ('LEN2', LEN2)]
+        define_macros=[('LEN1', LEN1), ('LEN2', LEN2)],
+        extra_compile_args=['-std=c++11'],
     )
 ]
 
