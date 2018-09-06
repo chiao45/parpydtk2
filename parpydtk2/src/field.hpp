@@ -130,15 +130,21 @@ class FieldData {
 
 /// \class FieldDataSet
 /// \brief a set of field data
-class FieldDataSet
-    : public std::unordered_map<std::string, std::unique_ptr<FieldData>> {
-  typedef std::unordered_map<std::string, std::unique_ptr<FieldData>> base_t;
+class FieldDataSet {
+  typedef std::unordered_map<std::string, FieldData *> base_t;
+  typedef base_t::iterator iterator;
+  typedef base_t::const_iterator const_iterator;
 
  public:
+  /// \brief destructor
+  virtual ~FieldDataSet() {
+    for (auto iter = fs_.begin(); iter != fs_.end(); ++iter)
+      delete iter->second;
+  }
   /// \brief check if a field exist
   /// \param[in] fn field name
   inline bool has_field(const std::string &fn) const noexcept {
-    return base_t::find(fn) != base_t::cend();
+    return fs_.find(fn) != fs_.cend();
   }
 
   /// \brief create an data field
@@ -149,7 +155,7 @@ class FieldDataSet
   inline void create(::moab::Core &mdb, const std::string &field_name,
                      int dim = 1) {
     // use move
-    base_t::emplace(
+    fs_.emplace(
         std::make_pair(field_name, new FieldData(mdb, field_name, dim)));
   }
 
@@ -158,7 +164,7 @@ class FieldDataSet
   /// \note this overloads the base operator[]
   FieldData &operator[](const std::string &fn) {
     try {
-      return *base_t::at(fn);
+      return *fs_.at(fn);
     } catch (...) {
       throw_error(fn + " did not exist");
     }
@@ -168,11 +174,32 @@ class FieldDataSet
   /// \param[in] fn field name
   const FieldData &operator[](const std::string &fn) const {
     try {
-      return *base_t::at(fn);
+      return *fs_.at(fn);
     } catch (...) {
       throw_error(fn + " did not exist");
     }
   }
+
+  /// \brief get the first iterator
+  inline iterator begin() noexcept { return fs_.begin(); }
+
+  /// \brief get the end iterator
+  inline iterator end() noexcept { return fs_.end(); }
+
+  /// \brief get the constant iterator
+  inline const_iterator begin() const noexcept { return fs_.begin(); }
+
+  /// \brief get the constant end iterator
+  inline const_iterator end() const noexcept { return fs_.end(); }
+
+  /// \brief get the constant iterator
+  inline const_iterator cbegin() const noexcept { return fs_.cbegin(); }
+
+  /// \brief get the constant end iterator
+  inline const_iterator cend() const noexcept { return fs_.cend(); }
+
+ protected:
+  base_t fs_;  ///< fields
 };
 
 }  // namespace parpydtk2
