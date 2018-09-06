@@ -1,5 +1,7 @@
 """The error handler module
 
+.. moduleauthor:: Qiao Chen <benechiao@gmail.com>
+
 Attributes
 ----------
 ERROR_CODE : int
@@ -11,9 +13,8 @@ Examples
 >>> try:
 ...     # your programs here
 ... except Expection:
-...     dtk.ERROR_CODE = 1
+...     dtk.error.ERROR_CODE = 1
 ...     raise
-
 """
 
 import atexit

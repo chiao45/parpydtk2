@@ -1,5 +1,7 @@
 """Main module interface of ParPyDTK2
 
+.. moduleauthor:: Qiao Chen <benechiao@gmail.com>
+
 Attributes
 ----------
 B2G : bool

@@ -9,6 +9,8 @@
 This module defines the representation of an interface mesh databse patch. It
 is built on top of MOAB parallel mesh database. Since we are only interested in
 the meshless methods, only point clouds are needed in :class:`IMeshDB`.
+
+.. moduleauthor:: Qiao Chen <benechiao@gmail.com>
 """
 
 cimport numpy as cnp
@@ -40,7 +42,57 @@ __copyright__ = 'Copyright 2018, Qiao Chen'
 
 
 cdef class IMeshDB(object):
+    """Interface mesh database
+
+    ParPyDTK2 utilizes MOAB as the underlying mesh database. MOAB is an array
+    based mesh library that is adapted by DTK2. With array based mesh library,
+    the memory usage and computational cost are lower than typical pointer
+    based data structure. The mesh concept in this work is simple since only
+    meshless methods are ultilized, the only additional attribute one needs
+    is the `global IDs/handles`, which are used by both MOAB and DTK2. For most
+    applications, the global IDs can be computed offline.
+
+    One thing is not directly supported by IMeshDB is I/O. However, since this
+    is a Python module and only points clouds are needed, one can easily uses
+    a tool (e.g. `meshio <https://github.com/nschloe/meshio>`_) to load the
+    mesh.
+
+    Attributes
+    ----------
+    comm : MPI.Comm
+        MPI communicator
+    ranks : int
+        size of comm
+    rank : int
+        rank of comm
+    size : int
+        point cloud size, i.e. number of vertices
+    bbox : np.ndarray
+        local bounding box array of shape (2,3)
+    gbbox : np.ndarray
+        global bounding box array of shape (2,3)
+    """
+
     def __init__(self, comm=None):
+        """Constructor
+        
+        Parameters
+        ----------
+        comm : MPI.Comm (optional)
+            if no communicator or ``None`` is passed in, then ``MPI_COMM_WORLD``
+            will be used
+
+        Examples
+        --------
+        >>> # implicit communciator
+        >>> import parpydtk2 as dtk
+        >>> mdb = dtk.IMeshDB()
+
+        >>> # explicit communicator
+        >>> from mpi4py import MPI
+        >>> import parpydtk2 as dtk
+        >>> mdb = dtk.IMeshDB(MPI.COMM_WOLRD)
+        """
         pass
 
     def __cinit__(self, comm_t comm=None):
@@ -216,7 +268,7 @@ cdef class IMeshDB(object):
         """np.ndarray: local bounding box
 
         The bounding box is stored simply in a 2x3 array, where the first row
-        stores the minimum bounds while maximum bounds for the second row.
+        stores the maximum bounds while minimum bounds for the second row.
 
         .. warning::
 
@@ -236,7 +288,7 @@ cdef class IMeshDB(object):
         """np.ndarray: global bounding box
         
         The bounding box is stored simply in a 2x3 array, where the first row
-        stores the minimum bounds while maximum bounds for the second row.
+        stores the maximum bounds while minimum bounds for the second row.
 
         .. warning::
 

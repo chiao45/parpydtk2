@@ -8,6 +8,8 @@
 
 This module wraps DTK2 meshless solution transfer operators, which can provide
 convenient data remapping services.
+
+.. moduleauthor:: Qiao Chen <benechiao@gmail.com>
 """
 
 cimport numpy as cnp
@@ -36,7 +38,61 @@ __copyright__ = 'Copyright 2018, Qiao Chen'
 
 
 cdef class Mapper(object):
+    """DTK2 wrapper
+
+    The meshless methods in DTK2, including `modified moving least square`,
+    `spline interpolation` and `nearest node projection` methods are wrapped
+    within this class. The most advanced method is the MMLS fitting, which
+    is my personal recommendataion.
+
+    Attributes
+    ----------
+    blue_mesh : :py:class:`~parpydtk2.IMeshDB`
+        blue mesh participant
+    green_mesh : :py:class:`~parpydtk2.IMeshDB`
+        green mesh participant
+    comm : MPI.Comm
+        MPI communicator
+    ranks : int
+        size of comm
+    rank : int
+        rank of comm
+    dimension : int
+        spatial dimension
+    method : int
+        method flag, either MMLS, SPLINE, or N2N
+    basis : int
+        flag of basis function for weighting schemes used by MMLS and SPLINE
+    knn_b : int
+        k-nearest neighborhood for searching on blue_mesh
+    knn_g : int
+        k-nearest neighborhood for searching on green_mesh
+    radius_b : float
+        radius used for searching on blue_mesh
+    radius_g : float
+        radius used for searching on green_mesh
+    """
+
     def __init__(self, blue, green, profiling=True):
+        """Constructor
+
+        Parameters
+        ----------
+        blue_mesh : :py:class:`~parpydtk2.IMeshDB`
+            blue mesh participant
+        green_mesh : :py:class:`~parpydtk2.IMeshDB`
+            green mesh participant
+        profiling : bool (optional)
+            whether or not do timing report, default is ``True``.
+
+        Examples
+        --------
+        >>> from parpydtk2 import *
+        >>> blue, green = IMeshDB(), IMeshDB()
+        >>> # initialize blue and green
+        >>> mapper = Mapper(blue=blue,green=green)
+        >>> # do work with mapper
+        """
         pass
     
     def __cinit__(self, IMeshDB blue, IMeshDB green, profiling=True):
@@ -264,7 +320,7 @@ cdef class Mapper(object):
         Returns
         -------
         bool
-            `True` if (bf,gf) exists in `direct`ion
+            ``True`` if (bf,gf) exists in the ``direct`` direction
         """
         cdef:
             std_string bf_ = <std_string> bf.encode('UTF-8')
@@ -297,7 +353,7 @@ cdef class Mapper(object):
         self.mp.begin_transfer()
 
     def transfer_data(self, str bf, str gf, bool direct):
-        """Transfer (bf, gf) in `direct`ion
+        """Transfer (bf, gf) in the ``direct`` direction
 
         Parameters
         ----------
@@ -306,7 +362,7 @@ cdef class Mapper(object):
         gf : str
             green mesh field name
         direct : bool
-            `True` for blue->green, `False` for the opposite
+            ``True`` for blue->green, ``False`` for the opposite
 
         See Also
         --------
