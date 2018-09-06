@@ -32,6 +32,10 @@
 
 namespace parpydtk2 {
 
+/** \addtogroup field
+ * @{
+ */ 
+
 /// \class FieldData
 /// \brief a representation of MOAB tag for field data
 class FieldData {
@@ -201,5 +205,7 @@ class FieldDataSet {
  protected:
   base_t fs_;  ///< fields
 };
+
+/** @}*/
 
 }  // namespace parpydtk2

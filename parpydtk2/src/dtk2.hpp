@@ -37,21 +37,27 @@
 #include <DTK_MapOperatorFactory.hpp>
 #include <Teuchos_ParameterList.hpp>
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 // helper macro
 #define FOR_DIR(__i) for (int __i = 0; i < 2; ++i)
 
 #if !defined(LEN1) || (LEN1 <= 0)
-/// \def LEN1
-/// \brief length of '-----' string
+// length of '-----' string
 #define LEN1 100
 #endif
 #if !defined(LEN2) || (LEN2 <= 0)
-/// \def LEN2
-/// \brief white spaces before option names
+//  white spaces before option names
 #define LEN2 15
 #endif
 
+#endif
+
 namespace parpydtk2 {
+
+/** \addtogroup mapper
+ * @{
+ */ 
 
 /// \enum Methods
 /// \brief available methods
@@ -585,6 +591,8 @@ class Mapper {
 
 // define the factory
 ::DataTransferKit::MapOperatorFactory Mapper::factory_;
+
+/** @}*/
 
 }  // namespace parpydtk2
 

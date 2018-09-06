@@ -43,6 +43,10 @@
 
 namespace parpydtk2 {
 
+/** \addtogroup mesh
+ * @{
+ */ 
+
 /// \class IMeshDB
 /// \brief interface mesh database, build on top of MOAB
 class IMeshDB {
@@ -590,5 +594,7 @@ class IMeshDB {
   /// \brief get the dtk fields
   inline dtk_field_t &dtk_fields() noexcept { return dtkfields_; }
 };
+
+/** @}*/
 
 }  // namespace parpydtk2
