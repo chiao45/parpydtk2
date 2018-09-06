@@ -259,7 +259,8 @@ class IMeshDB {
     }
 
     // NOTE the following part is to resolve the empty partition issues
-    // with DTK, we assign a dummy nodes
+    // with DTK by assigning a duplication node from mater process to
+    // processes that are empty
     if (rank() == 0)
       for (const auto &vset : vsets_)
         throw_error_if(locals_[vset].size() == 0,
@@ -434,7 +435,6 @@ class IMeshDB {
 
   /// \brief get bounding box
   /// \param[out] v values
-  /// \param[in] set_id set ID
   inline void get_bbox(double *v) const noexcept {
     const auto &box = bboxes_[0];
     for (int i = 0; i < 6; ++i) v[i] = box[i];
@@ -454,7 +454,7 @@ class IMeshDB {
     throw_error_if(dim < 1, "invalid field dimension");
     throw_error_if(
         created_,
-        "you cannot create fields one a IMeshDB is marked as created!");
+        "you cannot create fields once an IMeshDB is marked as created!");
     fields_.create(mdb_, field_name, dim);
   }
 
@@ -476,7 +476,7 @@ class IMeshDB {
   inline void assign_field(const std::string &field_name,
                            const double *values) {
     throw_error_if(!created_,
-                   "you cannot assign/extract values on a incomplete mesh.. "
+                   "you cannot assign/extract values on an incomplete mesh.. "
                    "did you forget to call finish_create?");
     fields_[field_name].assign(locals_[0], values);  // operator[] throws
   }
@@ -498,7 +498,7 @@ class IMeshDB {
   inline void extract_field(const std::string &field_name,
                             double *values) const {
     throw_error_if(!created_,
-                   "you cannot assign/extract values on a incomplete mesh.. "
+                   "you cannot assign/extract values on an incomplete mesh.. "
                    "did you forget to call finish_create?");
     fields_[field_name].extract(locals_[0], values);  // operator[] throws
   }
