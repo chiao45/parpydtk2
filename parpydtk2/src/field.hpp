@@ -34,7 +34,7 @@ namespace parpydtk2 {
 
 /** \addtogroup field
  * @{
- */ 
+ */
 
 /// \class FieldData
 /// \brief a representation of MOAB tag for field data
@@ -65,7 +65,7 @@ class FieldData {
   virtual ~FieldData() = default;
 
   /// \brief assign values
-  /// \param[in] ranges entity ranges, for this work, it should be vertices
+  /// \param[in] range entity ranges, for this work, it should be vertices
   /// \param[in] values data values, for vector/tensor, C order is expected
   inline void assign(const ::moab::Range &range, const double *values) {
     ::moab::ErrorCode ret =
@@ -77,7 +77,7 @@ class FieldData {
   ///
   /// This function is used by Python for handling empty partitions
   ///
-  /// \param[in] ranges entity ranges
+  /// \param[in] range entity ranges
   /// \param[in] values values for the first node, at least size of dim
   inline void assign_1st(const ::moab::Range &range, const double *values) {
     const entity_t first = range[0];
@@ -86,7 +86,7 @@ class FieldData {
   }
 
   /// \brief extract values
-  /// \param[in] ranges entity ranges, for this work, it should be vertices
+  /// \param[in] range entity ranges, for this work, it should be vertices
   /// \param[out] values data values, for vector/tensor, C order is expected
   inline void extract(const ::moab::Range &range, double *values) const {
     moab::ErrorCode ret =
@@ -95,7 +95,7 @@ class FieldData {
   }
 
   /// \brief extract the value from the first node
-  /// \param[in] ranges entity ranges
+  /// \param[in] range entity ranges
   /// \param[out] values values for the first node, at least size of dim
   inline void extract_1st(const ::moab::Range &range, double *values) const {
     const entity_t first = range[0];
@@ -123,6 +123,7 @@ class FieldData {
   std::string fn_;
 
   /// \brief set count
+  /// \deprecated not used, always 0
   int set_;
 
   /// \brief field dimension
@@ -136,10 +137,12 @@ class FieldData {
 /// \brief a set of field data
 class FieldDataSet {
   typedef std::unordered_map<std::string, FieldData *> base_t;
-  typedef base_t::iterator iterator;
-  typedef base_t::const_iterator const_iterator;
+  ///< data structure
 
  public:
+  typedef base_t::iterator iterator;              ///< interator type
+  typedef base_t::const_iterator const_iterator;  ///< constant iterator
+
   /// \brief destructor
   virtual ~FieldDataSet() {
     for (auto iter = fs_.begin(); iter != fs_.end(); ++iter)

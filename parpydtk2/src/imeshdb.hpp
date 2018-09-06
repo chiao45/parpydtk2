@@ -562,8 +562,11 @@ class IMeshDB {
   /// \brief flag to indicate whether users are done with creating mesh
   bool created_;
 
-  /// \brief global ID and partition tags
-  ::moab::Tag gidtag_, parttag_;
+  /// \brief global ID tag
+  ::moab::Tag gidtag_;
+
+  /// \brief partition tag
+  ::moab::Tag parttag_;
 
   /// \brief flag to indicate if we have user computed global ID
   bool usergid_;

@@ -130,9 +130,11 @@ enum { root_set = 0 };
   if (!__rank) std::cout << __msg << '\n'
 
 /// \def streamer
+/// \brief streaming message with specific rank
 #define streamer(__rank) std::cout << '[' << __rank << "] "
 
 /// \def streamer_master
+/// \brief streaming messages only on the master process
 #define streamer_master(__rank) \
   if (!__rank) std::cout
 

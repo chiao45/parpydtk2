@@ -159,7 +159,8 @@ class Mapper {
 
  public:
   /// \brief constructor
-  /// \param[in] comm communicator
+  /// \param[in] B input blue mesh
+  /// \param[in] G input green mesh
   /// \param[in] version passed from Python inteface
   /// \param[in] date passed from Python interface
   /// \param[in] profiling whether do simple profiling, i.e. wtime
