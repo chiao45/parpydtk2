@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/// \file parpydtk2/src/dtk2.hpp
+/// \file src/dtk2.hpp
 /// \brief mapper based on dtk2
 
 #pragma once

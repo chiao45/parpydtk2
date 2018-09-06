@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/// \file parpydtk2/src/imeshdb.hpp
+/// \file src/imeshdb.hpp
 /// \brief interface mesh database manager
 
 #pragma once

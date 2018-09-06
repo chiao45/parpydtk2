@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/// \file parpydtk2/src/field.hpp
+/// \file src/field.hpp
 /// \brief wrapper of MOAB tag for field data
 
 #pragma once

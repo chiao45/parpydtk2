@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-/// \file parpydtk2/src/common.hpp
+/// \file src/common.hpp
 /// \brief common interface
 /// \note exceptions need to be handled properly in parallel
 
