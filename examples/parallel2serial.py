@@ -99,12 +99,6 @@ try:
     # create our analytical model, i.e. 10+sin(x)*cos(y)
     bf = 10.0 + np.sin(lcob[:, 0]) * np.cos(lcob[:, 1])
     gf = np.sin(cog[:, 0]) * np.cos(cog[:, 1]) + 10.0
-    # NOTE that the following only runs on green master mesh
-    if not rank:
-        green.assign_field('g', gf)
-    # Since green is serial and has empty partition, we must call this to
-    # resolve asynchronous values
-    green.resolve_empty_partitions('g')
 
     ##############
     # Mapper part
@@ -124,6 +118,13 @@ try:
     mapper.register_coupling_fields(bf='b', gf='g', direct=B2G)
     mapper.register_coupling_fields(bf='b', gf='g', direct=G2B)
     mapper.end_initialization()
+
+    # NOTE that the following only runs on green master mesh
+    if not rank:
+        green.assign_field('g', gf)
+    # Since green is serial and has empty partition, we must call this to
+    # resolve asynchronous values
+    green.resolve_empty_partitions('g')
 
     # solution transfer region
     mapper.begin_transfer()
