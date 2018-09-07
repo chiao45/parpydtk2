@@ -8,6 +8,10 @@ Parallel Solution Transfer Service with DTK2 and MOAB
 .. image:: https://img.shields.io/pypi/l/parpydtk2.svg?branch=parallel
     :target: https://pypi.org/project/parpydtk2/
 
+
+.. image:: docs/_static/logo.png
+    :align: center
+
 This package provides a Python3 interface of using
 `DTK2 <http://ornl-cees.github.io/DataTransferKit/>`_ and
 `MOAB <http://sigma.mcs.anl.gov/moab-library/>`_ in parallel with MPI for
