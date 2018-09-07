@@ -5,7 +5,7 @@
 Installation
 ============
 
-Installing this package is not a trivial task due to the heavy dependencies.
+Installing this package is not a trivial task due to its heavy dependencies.
 ParPyDTK2 has the following installation requirements:
 
 .. _dep:
@@ -37,8 +37,7 @@ Install `MOAB`_
 
 The `MOAB official README <https://bitbucket.org/fathomteam/moab>`_ has a
 very clear description of the installation process. Here we take an excerpt
-from our `MOAB Docker image <https://github.com/unifem/cht-coupler/blob/meshdb-bin/Dockerfile#L13>`_
-build:
+from our `MOAB Docker image building script <https://github.com/unifem/cht-coupler/blob/meshdb-bin/Dockerfile#L13>`_:
 
 .. code-block:: console
 
@@ -70,13 +69,14 @@ build:
 
 Notice that this is for system installation. Install to your preferred
 locations if you don't have root access. Also, turn off those optional packages
-if you don't have them, the only MPI and HDF5 are necessary.
+if you don't have them, only MPI and HDF5 are necessary.
 
 .. warning:: You must build it into a shared object!
 
 .. note::
 
-    If you use Ubuntu >= 17.10, all these packages are officially supported.
+    If you use Ubuntu >= 17.10, all those optional packages are available
+    through ``apt``.
 
 .. _install_dtk2:
 
@@ -85,8 +85,8 @@ Install `DTK2`_
 
 `DTK2`_ is shipped as a sub-module of `Trilinos`_, so installing `Trilinos`_ is
 needed. For people who are not familiar with `Trilinos`_, this can be tricky.
-The following is an excerpt from our `DTK2 Docker image <https://github.com/unifem/cht-coupler/blob/mapper-bin/Dockerfile#L42>`_
-build:
+Therefore, an excerpt from our `DTK2 Docker image building script <https://github.com/unifem/cht-coupler/blob/mapper-bin/Dockerfile#L42>`_
+might be helpful:
 
 .. code-block:: console
 
@@ -136,10 +136,10 @@ build:
     $ make && sudo make install
 
 Again, this assumes root access, adjust this based on your situation. `DTK2`_
-needs to lie in the root directory of `Trilinos`_ and be turned on through
+needs to stay in the root directory of `Trilinos`_ and be turned on through
 switches ``DTrilinos_EXTRA_REPOSITORIES`` and
 ``DTrilinos_ENABLE_DataTransferKit``. The environment var ``MOAB_ROOT`` is
-where you install `MOAB`_.
+the place where you install `MOAB`_.
 
 .. note::
 
@@ -159,8 +159,8 @@ The easiest way is through PyPI:
     $ sudo pip3 install parpydtk2
 
 However, this assumes that ParPyDTK2 can find `MOAB`_ and `DTK2`_ on the
-system. Automatically, with different specifications of ``install`` command,
-ParPyDTK2 can add different paths in order to locate `MOAB`_ and `DTK2`_.
+system. With different specifications of ``install`` command, ParPyDTK2 can
+automatically add different paths to search for `MOAB`_ and `DTK2`_.
 
 .. code-block:: console
 

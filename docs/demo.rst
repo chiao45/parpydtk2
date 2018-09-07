@@ -7,7 +7,7 @@ A Demo
 
 Here, we show a demo for transferring solutions between two meshes of the
 unit square. We let the ``blue`` mesh participant run in parallel with two
-cores, while the ``green`` side is treated as serial mesh.
+cores, while the ``green`` side is treated as a serial mesh.
 
 .. code-block:: python
     :linenos:
@@ -23,7 +23,7 @@ cores, while the ``green`` side is treated as serial mesh.
     assert comm.size == 2
     rank = comm.rank
 
-For demo purpose, we assign the meshes globally.
+For demo purpose, we construct the meshes globally.
 
 .. code-block:: python
     :lineno-start: 12
@@ -87,7 +87,7 @@ the two mesh databases.
 
 As we can see, we equally distributed the mesh into the two cores as well as
 the corresponding global IDs. In line 56, the ``False`` flag indicates that
-the mesh database should use the user-provided global Ids.
+the mesh database should use the user-provided global IDs.
 
 .. warning::
 

@@ -8,7 +8,7 @@ Introduction
 Background & Motivation
 -----------------------
 
-Multi-physics coupling problems have been one of the popular topics. People try
+Multi-physics coupling has become one of the popular topics. People try
 to put different models together and simulate the behaviors in a coupled
 fashion. With the popularity of `partitioned approach`, i.e. solve different
 domains with different solvers and couple the interface conditions as those
@@ -24,12 +24,13 @@ an easy task, since it involves the following research aspects:
 3. **parallel rendezvous & HPC**, i.e. handling migrating meshes that have
     different parallel partitions.
 
-`Data Transfer Kit-2.0`_ (DTK2) is a package that is developed at the Oak Ridge
-National Laboratory. `DTK2`_ provides parallel solution transfer services with
-`meshless` (a.k.a. `mesh-free`) methods, which are relatively easy to implement
-and computational efficient. Particularly, we are interested in its
-`modified moving least square` [#]_ method that is an improvement of
-traditional MLS fitting in terms of robustness on featured geometries.
+`Data Transfer Kit-2.0`_ (DTK2) is a package that is developed at the
+`Oak Ridge National Laboratory <https://www.ornl.gov/>`_. `DTK2`_ provides
+parallel solution transfer services with `meshless` (a.k.a. `mesh-free`)
+methods, which are relatively easy to implement and computational efficient.
+Particularly, we are interested in its `modified moving least square` [#]_
+method that is an improvement of traditional MLS fitting in terms of robustness
+on featured geometries.
 
 .. [#]
 
@@ -40,8 +41,8 @@ traditional MLS fitting in terms of robustness on featured geometries.
     Method, Nashville, Tennessee · April 19–23, 2015, on CD-ROM, American
     Nuclear Society, LaGrange Park, IL (2015).
 
-`Mesh-Oriented datABase`_ is an array-based general purpose mesh library with
-MPI support. Array-based mesh data structure is more efficient in both
+`Mesh-Oriented datABase`_ (MOAB) is an array-based general purpose mesh library
+with MPI support. Array-based mesh data structure is more efficient in both
 computational cost and memory usage compared to traditional pointer-based
 data structures. `MOAB`_ has been adapted in `DTK2`_, so we choose to use it
 as our mesh database for this work.
@@ -54,7 +55,13 @@ different languages together and drive executable binaries smoothly. Its
 built-in reference counting, garbage collection, and pass-by-reference make it
 as one of the best choices for developing multi-physics coupling frameworks.
 In addition, MPI is well supported through the `mpi4py`_ package.
-**This is the core motivation of this project!**
+**This motivates us to develop a Python interface for DTK2!**
+
+License
+-------
+
+This package is distributed under MIT License. For detailed information, please
+take a look at the `LICENSE <https://github.com/chiao45/parpydtk2/blob/parallel/LICENSE>`_ file.
 
 .. _me:
 
