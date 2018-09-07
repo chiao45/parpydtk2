@@ -12,7 +12,9 @@ env:
 
 before_script:
   - docker --version
+  - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
   - docker pull $BASE
 
 script:
-  - docker build --file docker/Dockerfile .
+  - docker build --tag $DOCKER_USER/dtk:latest --file docker/Dockerfile .
+  - docker push $DOCKER_USER/dtk
