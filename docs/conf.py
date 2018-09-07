@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import os
 
-sys.path.insert(0, '..')
 XML_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'doxygen', 'xml')
 
