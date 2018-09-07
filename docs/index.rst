@@ -10,8 +10,15 @@ Welcome to ParPyDTK2's documentation!
     :maxdepth: 2
     :caption: Contents:
 
+    intro
+    install
+    details
+    demo
     api
 
+.. only:: html
+
+    The PDF of this documentation can be obtained ::download:`here ParPyDTK2.pdf<./ParPyDTK2.pdf>`.
 
 Indices and tables
 ==================
