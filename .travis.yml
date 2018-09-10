@@ -5,6 +5,7 @@ services: docker
 branches:
   only:
   - parallel
+  - dev
 
 env:
   global:
