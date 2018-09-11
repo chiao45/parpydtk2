@@ -2664,12 +2664,12 @@ static const char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does
 static const char __pyx_k_Can_only_create_a_buffer_that_is[] = "Can only create a buffer that is contiguous in memory.";
 static const char __pyx_k_Cannot_assign_to_read_only_memor[] = "Cannot assign to read-only memoryview";
 static const char __pyx_k_Cannot_create_writable_memory_vi[] = "Cannot create writable memory view from read-only memoryview";
-static const char __pyx_k_Create_a_data_field_for_solution[] = "Create a data field for solution transfer\n\n        This is the core function to register a field so that you can then\n        transfer its values to other domains. The ``dim`` parameter determines\n        the data type of the field. By default, it's 1, i.e. scalar fields.\n        For each node, a tensor of (1x``dim``) can be registered. For instance,\n        to transfer forces and displacements in FSI applications, ``dim`` is\n        3 (for 3D problems).\n\n        Parameters\n        ----------\n        field_name : str\n            name of the field\n        dim : int\n            dimension of the field, i.e. scalar, vector, tensor\n\n        Examples\n        --------\n        >>> from parpydtk2 import *\n        >>> mdb1 = IMeshDB()\n        >>> mdb1.begin_create()\n        >>> mdb1.create_field('heat flux')\n        ";
+static const char __pyx_k_Create_a_data_field_for_solution[] = "Create a data field for solution transfer\n\n        This is the core function to register a field so that you can then\n        transfer its values to other domains. The ``dim`` parameter determines\n        the data type of the field. By default, it's 1, i.e. scalar fields.\n        For each node, a tensor of (1x``dim``) can be registered. For instance,\n        to transfer forces and displacements in FSI applications, ``dim`` is\n        3 (for 3D problems).\n\n        Parameters\n        ----------\n        field_name : str\n            name of the field\n        dim : int\n            dimension of the field, i.e. scalar, vector, tensor\n\n        Examples\n        --------\n        >>> from parpydtk2 import *\n        >>> mdb1 = IMeshDB()\n        >>> mdb1.begin_create()\n        >>> # creating the meshdb\n        >>> mdb1.finish_create()\n        >>> mdb1.create_field('heat flux')\n        ";
 static const char __pyx_k_Create_a_set_of_coordinates_note[] = "Create a set of coordinates\n\n        .. note:: The ``coords`` must be C-ordering with ndim=2!\n\n        Parameters\n        ----------\n        coords : np.ndarray\n            nx3 coordinates in double precision\n\n        See Also\n        --------\n        :func:`assign_gids` : assign global IDs\n        :func:`extract_vertices`: extract vertex coordinates\n\n        Examples\n        --------\n        >>> from parpydtk2 import *\n        >>> import numpy as np\n        >>> mdb1 = IMeshDB()\n        >>> mdb1.begin_create()\n        >>> verts = np.zeros((2,3))  # two nodes\n        >>> verts[1][0] = 1.0\n        >>> mdb1.create_vertices(verts)\n        ";
 static const char __pyx_k_Empty_shape_tuple_for_cython_arr[] = "Empty shape tuple for cython.array";
 static const char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static const char __pyx_k_IMeshDB_create_vertices_line_138[] = "IMeshDB.create_vertices (line 138)";
-static const char __pyx_k_IMeshDB_resolve_empty_partitions[] = "IMeshDB.resolve_empty_partitions (line 389)";
+static const char __pyx_k_IMeshDB_resolve_empty_partitions[] = "IMeshDB.resolve_empty_partitions (line 391)";
 static const char __pyx_k_Incompatible_checksums_s_vs_0xb0[] = "Incompatible checksums (%s vs 0xb068931 = (name))";
 static const char __pyx_k_Indirect_dimensions_not_supporte[] = "Indirect dimensions not supported";
 static const char __pyx_k_Interface_mesh_database_This_mod[] = "Interface mesh database\n\nThis module defines the representation of an interface mesh databse patch. It\nis built on top of MOAB parallel mesh database. Since we are only interested in\nthe meshless methods, only point clouds are needed in :class:`IMeshDB`.\n\n.. moduleauthor:: Qiao Chen <benechiao@gmail.com>\n";
@@ -4560,7 +4560,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_5gbbox___get__(struct __p
 
 /* Python wrapper */
 static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_23create_field(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9parpydtk2_7imeshdb_7IMeshDB_22create_field[] = "IMeshDB.create_field(self, unicode field_name, int dim=1)\nCreate a data field for solution transfer\n\n        This is the core function to register a field so that you can then\n        transfer its values to other domains. The ``dim`` parameter determines\n        the data type of the field. By default, it's 1, i.e. scalar fields.\n        For each node, a tensor of (1x``dim``) can be registered. For instance,\n        to transfer forces and displacements in FSI applications, ``dim`` is\n        3 (for 3D problems).\n\n        Parameters\n        ----------\n        field_name : str\n            name of the field\n        dim : int\n            dimension of the field, i.e. scalar, vector, tensor\n\n        Examples\n        --------\n        >>> from parpydtk2 import *\n        >>> mdb1 = IMeshDB()\n        >>> mdb1.begin_create()\n        >>> mdb1.create_field('heat flux')\n        ";
+static char __pyx_doc_9parpydtk2_7imeshdb_7IMeshDB_22create_field[] = "IMeshDB.create_field(self, unicode field_name, int dim=1)\nCreate a data field for solution transfer\n\n        This is the core function to register a field so that you can then\n        transfer its values to other domains. The ``dim`` parameter determines\n        the data type of the field. By default, it's 1, i.e. scalar fields.\n        For each node, a tensor of (1x``dim``) can be registered. For instance,\n        to transfer forces and displacements in FSI applications, ``dim`` is\n        3 (for 3D problems).\n\n        Parameters\n        ----------\n        field_name : str\n            name of the field\n        dim : int\n            dimension of the field, i.e. scalar, vector, tensor\n\n        Examples\n        --------\n        >>> from parpydtk2 import *\n        >>> mdb1 = IMeshDB()\n        >>> mdb1.begin_create()\n        >>> # creating the meshdb\n        >>> mdb1.finish_create()\n        >>> mdb1.create_field('heat flux')\n        ";
 static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_23create_field(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_field_name = 0;
   int __pyx_v_dim;
@@ -4640,7 +4640,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_22create_field(struct __p
   std::string __pyx_t_2;
   __Pyx_RefNannySetupContext("create_field", 0);
 
-  /* "parpydtk2/imeshdb.pyx":330
+  /* "parpydtk2/imeshdb.pyx":332
  *         >>> mdb1.create_field('heat flux')
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -4649,15 +4649,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_22create_field(struct __p
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 330, __pyx_L1_error)
+    __PYX_ERR(0, 332, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 330, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 332, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 330, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 332, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":331
+  /* "parpydtk2/imeshdb.pyx":333
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')
  *         self.mdb.get().create_field(fn, dim)             # <<<<<<<<<<<<<<
@@ -4668,7 +4668,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_22create_field(struct __p
     __pyx_v_self->mdb.get()->create_field(__pyx_v_fn, __pyx_v_dim);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 331, __pyx_L1_error)
+    __PYX_ERR(0, 333, __pyx_L1_error)
   }
 
   /* "parpydtk2/imeshdb.pyx":306
@@ -4692,7 +4692,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_22create_field(struct __p
   return __pyx_r;
 }
 
-/* "parpydtk2/imeshdb.pyx":333
+/* "parpydtk2/imeshdb.pyx":335
  *         self.mdb.get().create_field(fn, dim)
  * 
  *     def has_field(self, str field_name):             # <<<<<<<<<<<<<<
@@ -4707,7 +4707,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_25has_field(PyObject *__p
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("has_field (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 333, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 335, __pyx_L1_error)
   __pyx_r = __pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_24has_field(((struct __pyx_obj_9parpydtk2_7imeshdb_IMeshDB *)__pyx_v_self), ((PyObject*)__pyx_v_field_name));
 
   /* function exit code */
@@ -4727,7 +4727,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_24has_field(struct __pyx_
   std::string __pyx_t_2;
   __Pyx_RefNannySetupContext("has_field", 0);
 
-  /* "parpydtk2/imeshdb.pyx":346
+  /* "parpydtk2/imeshdb.pyx":348
  *             `True` if this meshdb has `field_name`
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -4736,15 +4736,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_24has_field(struct __pyx_
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 346, __pyx_L1_error)
+    __PYX_ERR(0, 348, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 348, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 348, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":347
+  /* "parpydtk2/imeshdb.pyx":349
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')
  *         return self.mdb.get().has_field(fn)             # <<<<<<<<<<<<<<
@@ -4752,13 +4752,13 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_24has_field(struct __pyx_
  *     def field_dim(self, str field_name):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->mdb.get()->has_field(__pyx_v_fn)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 347, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyBool_FromLong(__pyx_v_self->mdb.get()->has_field(__pyx_v_fn)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "parpydtk2/imeshdb.pyx":333
+  /* "parpydtk2/imeshdb.pyx":335
  *         self.mdb.get().create_field(fn, dim)
  * 
  *     def has_field(self, str field_name):             # <<<<<<<<<<<<<<
@@ -4777,7 +4777,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_24has_field(struct __pyx_
   return __pyx_r;
 }
 
-/* "parpydtk2/imeshdb.pyx":349
+/* "parpydtk2/imeshdb.pyx":351
  *         return self.mdb.get().has_field(fn)
  * 
  *     def field_dim(self, str field_name):             # <<<<<<<<<<<<<<
@@ -4792,7 +4792,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_27field_dim(PyObject *__p
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("field_dim (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 349, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 351, __pyx_L1_error)
   __pyx_r = __pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_26field_dim(((struct __pyx_obj_9parpydtk2_7imeshdb_IMeshDB *)__pyx_v_self), ((PyObject*)__pyx_v_field_name));
 
   /* function exit code */
@@ -4813,7 +4813,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_26field_dim(struct __pyx_
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("field_dim", 0);
 
-  /* "parpydtk2/imeshdb.pyx":362
+  /* "parpydtk2/imeshdb.pyx":364
  *             data field dimension of `field_name`
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -4822,15 +4822,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_26field_dim(struct __pyx_
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 362, __pyx_L1_error)
+    __PYX_ERR(0, 364, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 362, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 364, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 362, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 364, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":363
+  /* "parpydtk2/imeshdb.pyx":365
  *         """
  *         cdef std_string fn = <std_string> field_name.encode('UTF-8')
  *         return self.mdb.get().field_dim(fn)             # <<<<<<<<<<<<<<
@@ -4842,15 +4842,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_26field_dim(struct __pyx_
     __pyx_t_3 = __pyx_v_self->mdb.get()->field_dim(__pyx_v_fn);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 363, __pyx_L1_error)
+    __PYX_ERR(0, 365, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 363, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_t_3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "parpydtk2/imeshdb.pyx":349
+  /* "parpydtk2/imeshdb.pyx":351
  *         return self.mdb.get().has_field(fn)
  * 
  *     def field_dim(self, str field_name):             # <<<<<<<<<<<<<<
@@ -4869,7 +4869,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_26field_dim(struct __pyx_
   return __pyx_r;
 }
 
-/* "parpydtk2/imeshdb.pyx":365
+/* "parpydtk2/imeshdb.pyx":367
  *         return self.mdb.get().field_dim(fn)
  * 
  *     def assign_field(self, str field_name, cnp.ndarray values not None):             # <<<<<<<<<<<<<<
@@ -4909,11 +4909,11 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_29assign_field(PyObject *
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_values)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("assign_field", 1, 2, 2, 1); __PYX_ERR(0, 365, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("assign_field", 1, 2, 2, 1); __PYX_ERR(0, 367, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "assign_field") < 0)) __PYX_ERR(0, 365, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "assign_field") < 0)) __PYX_ERR(0, 367, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -4926,14 +4926,14 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_29assign_field(PyObject *
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("assign_field", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 365, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("assign_field", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 367, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("parpydtk2.imeshdb.IMeshDB.assign_field", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 365, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_values), __pyx_ptype_5numpy_ndarray, 0, "values", 0))) __PYX_ERR(0, 365, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 367, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_values), __pyx_ptype_5numpy_ndarray, 0, "values", 0))) __PYX_ERR(0, 367, __pyx_L1_error)
   __pyx_r = __pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(((struct __pyx_obj_9parpydtk2_7imeshdb_IMeshDB *)__pyx_v_self), __pyx_v_field_name, __pyx_v_values);
 
   /* function exit code */
@@ -4959,7 +4959,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
   int __pyx_t_6;
   __Pyx_RefNannySetupContext("assign_field", 0);
 
-  /* "parpydtk2/imeshdb.pyx":383
+  /* "parpydtk2/imeshdb.pyx":385
  *         """
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -4968,15 +4968,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 383, __pyx_L1_error)
+    __PYX_ERR(0, 385, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 383, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 385, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 383, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 385, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":384
+  /* "parpydtk2/imeshdb.pyx":386
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')
  *             int dim = self.mdb.get().field_dim(fn)             # <<<<<<<<<<<<<<
@@ -4987,11 +4987,11 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
     __pyx_t_3 = __pyx_v_self->mdb.get()->field_dim(__pyx_v_fn);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 384, __pyx_L1_error)
+    __PYX_ERR(0, 386, __pyx_L1_error)
   }
   __pyx_v_dim = __pyx_t_3;
 
-  /* "parpydtk2/imeshdb.pyx":385
+  /* "parpydtk2/imeshdb.pyx":387
  *             std_string fn = <std_string> field_name.encode('UTF-8')
  *             int dim = self.mdb.get().field_dim(fn)
  *             int n = self.mdb.get().size() * dim             # <<<<<<<<<<<<<<
@@ -5000,7 +5000,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
  */
   __pyx_v_n = (__pyx_v_self->mdb.get()->size() * __pyx_v_dim);
 
-  /* "parpydtk2/imeshdb.pyx":386
+  /* "parpydtk2/imeshdb.pyx":388
  *             int dim = self.mdb.get().field_dim(fn)
  *             int n = self.mdb.get().size() * dim
  *         assert values.size >= n             # <<<<<<<<<<<<<<
@@ -5009,23 +5009,23 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_values), __pyx_n_s_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_values), __pyx_n_s_size); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 388, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 388, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_GE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_GE); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 388, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 386, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 388, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     if (unlikely(!__pyx_t_6)) {
       PyErr_SetNone(PyExc_AssertionError);
-      __PYX_ERR(0, 386, __pyx_L1_error)
+      __PYX_ERR(0, 388, __pyx_L1_error)
     }
   }
   #endif
 
-  /* "parpydtk2/imeshdb.pyx":387
+  /* "parpydtk2/imeshdb.pyx":389
  *             int n = self.mdb.get().size() * dim
  *         assert values.size >= n
  *         self.mdb.get().assign_field(fn, <const double *> values.data)             # <<<<<<<<<<<<<<
@@ -5036,10 +5036,10 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
     __pyx_v_self->mdb.get()->assign_field(__pyx_v_fn, ((double const *)__pyx_v_values->data));
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 387, __pyx_L1_error)
+    __PYX_ERR(0, 389, __pyx_L1_error)
   }
 
-  /* "parpydtk2/imeshdb.pyx":365
+  /* "parpydtk2/imeshdb.pyx":367
  *         return self.mdb.get().field_dim(fn)
  * 
  *     def assign_field(self, str field_name, cnp.ndarray values not None):             # <<<<<<<<<<<<<<
@@ -5062,7 +5062,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_28assign_field(struct __p
   return __pyx_r;
 }
 
-/* "parpydtk2/imeshdb.pyx":389
+/* "parpydtk2/imeshdb.pyx":391
  *         self.mdb.get().assign_field(fn, <const double *> values.data)
  * 
  *     def resolve_empty_partitions(self, str field_name):             # <<<<<<<<<<<<<<
@@ -5077,7 +5077,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_31resolve_empty_partition
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("resolve_empty_partitions (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 389, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 391, __pyx_L1_error)
   __pyx_r = __pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partitions(((struct __pyx_obj_9parpydtk2_7imeshdb_IMeshDB *)__pyx_v_self), ((PyObject*)__pyx_v_field_name));
 
   /* function exit code */
@@ -5120,7 +5120,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
   __pyx_pybuffernd_buf.data = NULL;
   __pyx_pybuffernd_buf.rcbuffer = &__pyx_pybuffer_buf;
 
-  /* "parpydtk2/imeshdb.pyx":417
+  /* "parpydtk2/imeshdb.pyx":419
  *         """
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -5129,15 +5129,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 417, __pyx_L1_error)
+    __PYX_ERR(0, 419, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 417, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 419, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 417, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 419, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":418
+  /* "parpydtk2/imeshdb.pyx":420
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')
  *             int dim = self.mdb.get().field_dim(fn)             # <<<<<<<<<<<<<<
@@ -5148,11 +5148,11 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
     __pyx_t_3 = __pyx_v_self->mdb.get()->field_dim(__pyx_v_fn);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 418, __pyx_L1_error)
+    __PYX_ERR(0, 420, __pyx_L1_error)
   }
   __pyx_v_dim = __pyx_t_3;
 
-  /* "parpydtk2/imeshdb.pyx":422
+  /* "parpydtk2/imeshdb.pyx":424
  *             int i
  *             cnp.ndarray[double, ndim=1] buf
  *         if self.mdb.get().has_empty():             # <<<<<<<<<<<<<<
@@ -5162,19 +5162,19 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
   __pyx_t_4 = (__pyx_v_self->mdb.get()->has_empty() != 0);
   if (__pyx_t_4) {
 
-    /* "parpydtk2/imeshdb.pyx":423
+    /* "parpydtk2/imeshdb.pyx":425
  *             cnp.ndarray[double, ndim=1] buf
  *         if self.mdb.get().has_empty():
  *             buf = np.empty(dim)             # <<<<<<<<<<<<<<
  *             if self.mdb.get().rank() == 0:
  *                 m2s = &self.mdb.get()._m2s()
  */
-    __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 425, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_empty); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_empty); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 425, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_dim); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 423, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_dim); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 425, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_7 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_6))) {
@@ -5187,14 +5187,14 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
       }
     }
     if (!__pyx_t_7) {
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_1);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_6)) {
         PyObject *__pyx_temp[2] = {__pyx_t_7, __pyx_t_5};
-        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -5203,26 +5203,26 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
         PyObject *__pyx_temp[2] = {__pyx_t_7, __pyx_t_5};
-        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else
       #endif
       {
-        __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_8 = PyTuple_New(1+1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 425, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_7); __pyx_t_7 = NULL;
         __Pyx_GIVEREF(__pyx_t_5);
         PyTuple_SET_ITEM(__pyx_t_8, 0+1, __pyx_t_5);
         __pyx_t_5 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 423, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 425, __pyx_L1_error)
     __pyx_t_9 = ((PyArrayObject *)__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5239,13 +5239,13 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
         __pyx_t_10 = __pyx_t_11 = __pyx_t_12 = 0;
       }
       __pyx_pybuffernd_buf.diminfo[0].strides = __pyx_pybuffernd_buf.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_buf.diminfo[0].shape = __pyx_pybuffernd_buf.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 423, __pyx_L1_error)
+      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 425, __pyx_L1_error)
     }
     __pyx_t_9 = 0;
     __pyx_v_buf = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "parpydtk2/imeshdb.pyx":424
+    /* "parpydtk2/imeshdb.pyx":426
  *         if self.mdb.get().has_empty():
  *             buf = np.empty(dim)
  *             if self.mdb.get().rank() == 0:             # <<<<<<<<<<<<<<
@@ -5255,7 +5255,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
     __pyx_t_4 = ((__pyx_v_self->mdb.get()->rank() == 0) != 0);
     if (__pyx_t_4) {
 
-      /* "parpydtk2/imeshdb.pyx":425
+      /* "parpydtk2/imeshdb.pyx":427
  *             buf = np.empty(dim)
  *             if self.mdb.get().rank() == 0:
  *                 m2s = &self.mdb.get()._m2s()             # <<<<<<<<<<<<<<
@@ -5264,7 +5264,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
  */
       __pyx_v_m2s = (&__pyx_v_self->mdb.get()->_m2s());
 
-      /* "parpydtk2/imeshdb.pyx":426
+      /* "parpydtk2/imeshdb.pyx":428
  *             if self.mdb.get().rank() == 0:
  *                 m2s = &self.mdb.get()._m2s()
  *                 self.mdb.get()._extract_1st(fn, <double *> buf.data)             # <<<<<<<<<<<<<<
@@ -5275,10 +5275,10 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
         __pyx_v_self->mdb.get()->_extract_1st(__pyx_v_fn, ((double *)__pyx_v_buf->data));
       } catch(...) {
         __Pyx_CppExn2PyErr();
-        __PYX_ERR(0, 426, __pyx_L1_error)
+        __PYX_ERR(0, 428, __pyx_L1_error)
       }
 
-      /* "parpydtk2/imeshdb.pyx":427
+      /* "parpydtk2/imeshdb.pyx":429
  *                 m2s = &self.mdb.get()._m2s()
  *                 self.mdb.get()._extract_1st(fn, <double *> buf.data)
  *                 for i in range(deref(m2s).size()):             # <<<<<<<<<<<<<<
@@ -5290,30 +5290,30 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
       for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_14; __pyx_t_3+=1) {
         __pyx_v_i = __pyx_t_3;
 
-        /* "parpydtk2/imeshdb.pyx":428
+        /* "parpydtk2/imeshdb.pyx":430
  *                 self.mdb.get()._extract_1st(fn, <double *> buf.data)
  *                 for i in range(deref(m2s).size()):
  *                     self.comm.Isend(buf, dest=deref(m2s)[i])             # <<<<<<<<<<<<<<
  *             elif self.mdb.get().empty():
  *                 req = self.comm.Irecv(buf, source=0)
  */
-        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_comm); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_comm); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_Isend); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_Isend); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_INCREF(((PyObject *)__pyx_v_buf));
         __Pyx_GIVEREF(((PyObject *)__pyx_v_buf));
         PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_v_buf));
-        __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
-        __pyx_t_5 = __Pyx_PyInt_From_int(((*__pyx_v_m2s)[__pyx_v_i])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyInt_From_int(((*__pyx_v_m2s)[__pyx_v_i])); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_dest, __pyx_t_5) < 0) __PYX_ERR(0, 428, __pyx_L1_error)
+        if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_dest, __pyx_t_5) < 0) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 428, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 430, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -5321,7 +5321,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
 
-      /* "parpydtk2/imeshdb.pyx":424
+      /* "parpydtk2/imeshdb.pyx":426
  *         if self.mdb.get().has_empty():
  *             buf = np.empty(dim)
  *             if self.mdb.get().rank() == 0:             # <<<<<<<<<<<<<<
@@ -5331,7 +5331,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
       goto __pyx_L4;
     }
 
-    /* "parpydtk2/imeshdb.pyx":429
+    /* "parpydtk2/imeshdb.pyx":431
  *                 for i in range(deref(m2s).size()):
  *                     self.comm.Isend(buf, dest=deref(m2s)[i])
  *             elif self.mdb.get().empty():             # <<<<<<<<<<<<<<
@@ -5341,27 +5341,27 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
     __pyx_t_4 = (__pyx_v_self->mdb.get()->empty() != 0);
     if (__pyx_t_4) {
 
-      /* "parpydtk2/imeshdb.pyx":430
+      /* "parpydtk2/imeshdb.pyx":432
  *                     self.comm.Isend(buf, dest=deref(m2s)[i])
  *             elif self.mdb.get().empty():
  *                 req = self.comm.Irecv(buf, source=0)             # <<<<<<<<<<<<<<
  *                 req.Wait()
  *                 self.mdb.get()._assign_1st(fn, <const double *> buf.data)
  */
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_comm); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 430, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_comm); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 432, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Irecv); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 430, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Irecv); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 432, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 430, __pyx_L1_error)
+      __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 432, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_INCREF(((PyObject *)__pyx_v_buf));
       __Pyx_GIVEREF(((PyObject *)__pyx_v_buf));
       PyTuple_SET_ITEM(__pyx_t_5, 0, ((PyObject *)__pyx_v_buf));
-      __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 430, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 432, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_source, __pyx_int_0) < 0) __PYX_ERR(0, 430, __pyx_L1_error)
-      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_5, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 430, __pyx_L1_error)
+      if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_source, __pyx_int_0) < 0) __PYX_ERR(0, 432, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_5, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 432, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -5369,14 +5369,14 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
       __pyx_v_req = __pyx_t_6;
       __pyx_t_6 = 0;
 
-      /* "parpydtk2/imeshdb.pyx":431
+      /* "parpydtk2/imeshdb.pyx":433
  *             elif self.mdb.get().empty():
  *                 req = self.comm.Irecv(buf, source=0)
  *                 req.Wait()             # <<<<<<<<<<<<<<
  *                 self.mdb.get()._assign_1st(fn, <const double *> buf.data)
  * 
  */
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_req, __pyx_n_s_Wait); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 431, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_req, __pyx_n_s_Wait); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 433, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __pyx_t_5 = NULL;
       if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_1))) {
@@ -5389,16 +5389,16 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
         }
       }
       if (__pyx_t_5) {
-        __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 431, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 433, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else {
-        __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 431, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 433, __pyx_L1_error)
       }
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-      /* "parpydtk2/imeshdb.pyx":432
+      /* "parpydtk2/imeshdb.pyx":434
  *                 req = self.comm.Irecv(buf, source=0)
  *                 req.Wait()
  *                 self.mdb.get()._assign_1st(fn, <const double *> buf.data)             # <<<<<<<<<<<<<<
@@ -5409,10 +5409,10 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
         __pyx_v_self->mdb.get()->_assign_1st(__pyx_v_fn, ((double const *)__pyx_v_buf->data));
       } catch(...) {
         __Pyx_CppExn2PyErr();
-        __PYX_ERR(0, 432, __pyx_L1_error)
+        __PYX_ERR(0, 434, __pyx_L1_error)
       }
 
-      /* "parpydtk2/imeshdb.pyx":429
+      /* "parpydtk2/imeshdb.pyx":431
  *                 for i in range(deref(m2s).size()):
  *                     self.comm.Isend(buf, dest=deref(m2s)[i])
  *             elif self.mdb.get().empty():             # <<<<<<<<<<<<<<
@@ -5422,7 +5422,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
     }
     __pyx_L4:;
 
-    /* "parpydtk2/imeshdb.pyx":422
+    /* "parpydtk2/imeshdb.pyx":424
  *             int i
  *             cnp.ndarray[double, ndim=1] buf
  *         if self.mdb.get().has_empty():             # <<<<<<<<<<<<<<
@@ -5431,7 +5431,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
  */
   }
 
-  /* "parpydtk2/imeshdb.pyx":389
+  /* "parpydtk2/imeshdb.pyx":391
  *         self.mdb.get().assign_field(fn, <const double *> values.data)
  * 
  *     def resolve_empty_partitions(self, str field_name):             # <<<<<<<<<<<<<<
@@ -5467,7 +5467,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_30resolve_empty_partition
   return __pyx_r;
 }
 
-/* "parpydtk2/imeshdb.pyx":435
+/* "parpydtk2/imeshdb.pyx":437
  * 
  * 
  *     def extract_field(self, str field_name,             # <<<<<<<<<<<<<<
@@ -5489,7 +5489,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_33extract_field(PyObject 
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_field_name,&__pyx_n_s_buffer,&__pyx_n_s_reshape,0};
     PyObject* values[3] = {0,0,0};
 
-    /* "parpydtk2/imeshdb.pyx":436
+    /* "parpydtk2/imeshdb.pyx":438
  * 
  *     def extract_field(self, str field_name,
  *         double[::1] buffer=None, reshape=False):             # <<<<<<<<<<<<<<
@@ -5529,7 +5529,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_33extract_field(PyObject 
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "extract_field") < 0)) __PYX_ERR(0, 435, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "extract_field") < 0)) __PYX_ERR(0, 437, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -5544,7 +5544,7 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_33extract_field(PyObject 
     }
     __pyx_v_field_name = ((PyObject*)values[0]);
     if (values[1]) {
-      __pyx_v_buffer = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_buffer.memview)) __PYX_ERR(0, 436, __pyx_L3_error)
+      __pyx_v_buffer = __Pyx_PyObject_to_MemoryviewSlice_dc_double(values[1], PyBUF_WRITABLE); if (unlikely(!__pyx_v_buffer.memview)) __PYX_ERR(0, 438, __pyx_L3_error)
     } else {
       __pyx_v_buffer = __pyx_k__3;
       __PYX_INC_MEMVIEW(&__pyx_v_buffer, 1);
@@ -5553,16 +5553,16 @@ static PyObject *__pyx_pw_9parpydtk2_7imeshdb_7IMeshDB_33extract_field(PyObject 
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("extract_field", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 435, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("extract_field", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 437, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("parpydtk2.imeshdb.IMeshDB.extract_field", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 435, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_field_name), (&PyUnicode_Type), 1, "field_name", 1))) __PYX_ERR(0, 437, __pyx_L1_error)
   __pyx_r = __pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(((struct __pyx_obj_9parpydtk2_7imeshdb_IMeshDB *)__pyx_v_self), __pyx_v_field_name, __pyx_v_buffer, __pyx_v_reshape);
 
-  /* "parpydtk2/imeshdb.pyx":435
+  /* "parpydtk2/imeshdb.pyx":437
  * 
  * 
  *     def extract_field(self, str field_name,             # <<<<<<<<<<<<<<
@@ -5608,7 +5608,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
   __pyx_pybuffernd_values.data = NULL;
   __pyx_pybuffernd_values.rcbuffer = &__pyx_pybuffer_values;
 
-  /* "parpydtk2/imeshdb.pyx":456
+  /* "parpydtk2/imeshdb.pyx":458
  *         """
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')             # <<<<<<<<<<<<<<
@@ -5617,15 +5617,15 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
  */
   if (unlikely(__pyx_v_field_name == Py_None)) {
     PyErr_Format(PyExc_AttributeError, "'NoneType' object has no attribute '%.30s'", "encode");
-    __PYX_ERR(0, 456, __pyx_L1_error)
+    __PYX_ERR(0, 458, __pyx_L1_error)
   }
-  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 456, __pyx_L1_error)
+  __pyx_t_1 = PyUnicode_AsUTF8String(__pyx_v_field_name); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 458, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 456, __pyx_L1_error)
+  __pyx_t_2 = __pyx_convert_string_from_py_std__in_string(__pyx_t_1); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 458, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_fn = ((std::string)__pyx_t_2);
 
-  /* "parpydtk2/imeshdb.pyx":457
+  /* "parpydtk2/imeshdb.pyx":459
  *         cdef:
  *             std_string fn = <std_string> field_name.encode('UTF-8')
  *             int n = self.mdb.get().size()             # <<<<<<<<<<<<<<
@@ -5634,7 +5634,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
  */
   __pyx_v_n = __pyx_v_self->mdb.get()->size();
 
-  /* "parpydtk2/imeshdb.pyx":458
+  /* "parpydtk2/imeshdb.pyx":460
  *             std_string fn = <std_string> field_name.encode('UTF-8')
  *             int n = self.mdb.get().size()
  *             int dim = self.mdb.get().field_dim(fn)             # <<<<<<<<<<<<<<
@@ -5645,11 +5645,11 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
     __pyx_t_3 = __pyx_v_self->mdb.get()->field_dim(__pyx_v_fn);
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 458, __pyx_L1_error)
+    __PYX_ERR(0, 460, __pyx_L1_error)
   }
   __pyx_v_dim = __pyx_t_3;
 
-  /* "parpydtk2/imeshdb.pyx":460
+  /* "parpydtk2/imeshdb.pyx":462
  *             int dim = self.mdb.get().field_dim(fn)
  *             cnp.ndarray[double, ndim=1] values
  *         if buffer is not None:             # <<<<<<<<<<<<<<
@@ -5659,7 +5659,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
   __pyx_t_4 = ((((PyObject *) __pyx_v_buffer.memview) != Py_None) != 0);
   if (__pyx_t_4) {
 
-    /* "parpydtk2/imeshdb.pyx":461
+    /* "parpydtk2/imeshdb.pyx":463
  *             cnp.ndarray[double, ndim=1] values
  *         if buffer is not None:
  *             assert len(buffer) >= n * dim             # <<<<<<<<<<<<<<
@@ -5671,24 +5671,24 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
       __pyx_t_5 = __Pyx_MemoryView_Len(__pyx_v_buffer); 
       if (unlikely(!((__pyx_t_5 >= (__pyx_v_n * __pyx_v_dim)) != 0))) {
         PyErr_SetNone(PyExc_AssertionError);
-        __PYX_ERR(0, 461, __pyx_L1_error)
+        __PYX_ERR(0, 463, __pyx_L1_error)
       }
     }
     #endif
 
-    /* "parpydtk2/imeshdb.pyx":462
+    /* "parpydtk2/imeshdb.pyx":464
  *         if buffer is not None:
  *             assert len(buffer) >= n * dim
  *             values = np.asarray(buffer)             # <<<<<<<<<<<<<<
  *         else:
  *             values = np.empty(n * dim, dtype='double')
  */
-    __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 462, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 464, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_asarray); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 462, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_asarray); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 464, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __pyx_memoryview_fromslice(__pyx_v_buffer, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 462, __pyx_L1_error)
+    __pyx_t_6 = __pyx_memoryview_fromslice(__pyx_v_buffer, 1, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 464, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_8 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_7))) {
@@ -5701,14 +5701,14 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
       }
     }
     if (!__pyx_t_8) {
-      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 462, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_1);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_7)) {
         PyObject *__pyx_temp[2] = {__pyx_t_8, __pyx_t_6};
-        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 462, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
@@ -5717,26 +5717,26 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_7)) {
         PyObject *__pyx_temp[2] = {__pyx_t_8, __pyx_t_6};
-        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 462, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       } else
       #endif
       {
-        __pyx_t_9 = PyTuple_New(1+1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 462, __pyx_L1_error)
+        __pyx_t_9 = PyTuple_New(1+1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 464, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_GIVEREF(__pyx_t_8); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_8); __pyx_t_8 = NULL;
         __Pyx_GIVEREF(__pyx_t_6);
         PyTuple_SET_ITEM(__pyx_t_9, 0+1, __pyx_t_6);
         __pyx_t_6 = 0;
-        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 462, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_9, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       }
     }
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 462, __pyx_L1_error)
+    if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 464, __pyx_L1_error)
     __pyx_t_10 = ((PyArrayObject *)__pyx_t_1);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5753,13 +5753,13 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
         __pyx_t_11 = __pyx_t_12 = __pyx_t_13 = 0;
       }
       __pyx_pybuffernd_values.diminfo[0].strides = __pyx_pybuffernd_values.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_values.diminfo[0].shape = __pyx_pybuffernd_values.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 462, __pyx_L1_error)
+      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 464, __pyx_L1_error)
     }
     __pyx_t_10 = 0;
     __pyx_v_values = ((PyArrayObject *)__pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "parpydtk2/imeshdb.pyx":460
+    /* "parpydtk2/imeshdb.pyx":462
  *             int dim = self.mdb.get().field_dim(fn)
  *             cnp.ndarray[double, ndim=1] values
  *         if buffer is not None:             # <<<<<<<<<<<<<<
@@ -5769,7 +5769,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
     goto __pyx_L3;
   }
 
-  /* "parpydtk2/imeshdb.pyx":464
+  /* "parpydtk2/imeshdb.pyx":466
  *             values = np.asarray(buffer)
  *         else:
  *             values = np.empty(n * dim, dtype='double')             # <<<<<<<<<<<<<<
@@ -5777,27 +5777,27 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
  *         if reshape and dim > 1:
  */
   /*else*/ {
-    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_empty); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_n * __pyx_v_dim)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_From_int((__pyx_v_n * __pyx_v_dim)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = PyTuple_New(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_9 = PyTuple_New(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 464, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_n_u_double) < 0) __PYX_ERR(0, 464, __pyx_L1_error)
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_9, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 464, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_n_u_double) < 0) __PYX_ERR(0, 466, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_9, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 466, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 464, __pyx_L1_error)
+    if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 466, __pyx_L1_error)
     __pyx_t_10 = ((PyArrayObject *)__pyx_t_6);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -5814,7 +5814,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
         __pyx_t_13 = __pyx_t_12 = __pyx_t_11 = 0;
       }
       __pyx_pybuffernd_values.diminfo[0].strides = __pyx_pybuffernd_values.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_values.diminfo[0].shape = __pyx_pybuffernd_values.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 464, __pyx_L1_error)
+      if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 466, __pyx_L1_error)
     }
     __pyx_t_10 = 0;
     __pyx_v_values = ((PyArrayObject *)__pyx_t_6);
@@ -5822,7 +5822,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
   }
   __pyx_L3:;
 
-  /* "parpydtk2/imeshdb.pyx":465
+  /* "parpydtk2/imeshdb.pyx":467
  *         else:
  *             values = np.empty(n * dim, dtype='double')
  *         self.mdb.get().extract_field(fn, <double *> values.data)             # <<<<<<<<<<<<<<
@@ -5833,17 +5833,17 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
     __pyx_v_self->mdb.get()->extract_field(__pyx_v_fn, ((double *)__pyx_v_values->data));
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(0, 465, __pyx_L1_error)
+    __PYX_ERR(0, 467, __pyx_L1_error)
   }
 
-  /* "parpydtk2/imeshdb.pyx":466
+  /* "parpydtk2/imeshdb.pyx":468
  *             values = np.empty(n * dim, dtype='double')
  *         self.mdb.get().extract_field(fn, <double *> values.data)
  *         if reshape and dim > 1:             # <<<<<<<<<<<<<<
  *             return values.reshape((n, dim))
  *         return values
  */
-  __pyx_t_14 = __Pyx_PyObject_IsTrue(__pyx_v_reshape); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 466, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyObject_IsTrue(__pyx_v_reshape); if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 468, __pyx_L1_error)
   if (__pyx_t_14) {
   } else {
     __pyx_t_4 = __pyx_t_14;
@@ -5854,20 +5854,20 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_4) {
 
-    /* "parpydtk2/imeshdb.pyx":467
+    /* "parpydtk2/imeshdb.pyx":469
  *         self.mdb.get().extract_field(fn, <double *> values.data)
  *         if reshape and dim > 1:
  *             return values.reshape((n, dim))             # <<<<<<<<<<<<<<
  *         return values
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_values), __pyx_n_s_reshape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 467, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_values), __pyx_n_s_reshape); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 467, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
-    __pyx_t_7 = __Pyx_PyInt_From_int(__pyx_v_dim); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 467, __pyx_L1_error)
+    __pyx_t_7 = __Pyx_PyInt_From_int(__pyx_v_dim); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_8 = PyTuple_New(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 467, __pyx_L1_error)
+    __pyx_t_8 = PyTuple_New(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 469, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_GIVEREF(__pyx_t_9);
     PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_9);
@@ -5886,14 +5886,14 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
       }
     }
     if (!__pyx_t_7) {
-      __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 467, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 469, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_GOTREF(__pyx_t_6);
     } else {
       #if CYTHON_FAST_PYCALL
       if (PyFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_7, __pyx_t_8};
-        __pyx_t_6 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 467, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 469, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -5902,20 +5902,20 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
       #if CYTHON_FAST_PYCCALL
       if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
         PyObject *__pyx_temp[2] = {__pyx_t_7, __pyx_t_8};
-        __pyx_t_6 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 467, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 469, __pyx_L1_error)
         __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       } else
       #endif
       {
-        __pyx_t_9 = PyTuple_New(1+1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 467, __pyx_L1_error)
+        __pyx_t_9 = PyTuple_New(1+1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 469, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __pyx_t_7 = NULL;
         __Pyx_GIVEREF(__pyx_t_8);
         PyTuple_SET_ITEM(__pyx_t_9, 0+1, __pyx_t_8);
         __pyx_t_8 = 0;
-        __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_9, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 467, __pyx_L1_error)
+        __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_9, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 469, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       }
@@ -5925,7 +5925,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
     __pyx_t_6 = 0;
     goto __pyx_L0;
 
-    /* "parpydtk2/imeshdb.pyx":466
+    /* "parpydtk2/imeshdb.pyx":468
  *             values = np.empty(n * dim, dtype='double')
  *         self.mdb.get().extract_field(fn, <double *> values.data)
  *         if reshape and dim > 1:             # <<<<<<<<<<<<<<
@@ -5934,7 +5934,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
  */
   }
 
-  /* "parpydtk2/imeshdb.pyx":468
+  /* "parpydtk2/imeshdb.pyx":470
  *         if reshape and dim > 1:
  *             return values.reshape((n, dim))
  *         return values             # <<<<<<<<<<<<<<
@@ -5944,7 +5944,7 @@ static PyObject *__pyx_pf_9parpydtk2_7imeshdb_7IMeshDB_32extract_field(struct __
   __pyx_r = ((PyObject *)__pyx_v_values);
   goto __pyx_L0;
 
-  /* "parpydtk2/imeshdb.pyx":435
+  /* "parpydtk2/imeshdb.pyx":437
  * 
  * 
  *     def extract_field(self, str field_name,             # <<<<<<<<<<<<<<
@@ -22507,7 +22507,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 427, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 429, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(2, 229, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(2, 810, __pyx_L1_error)
@@ -23379,14 +23379,14 @@ if (!__Pyx_RefNanny) {
  */
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_copyright, __pyx_kp_u_Copyright_2018_Qiao_Chen) < 0) __PYX_ERR(0, 41, __pyx_L1_error)
 
-  /* "parpydtk2/imeshdb.pyx":436
+  /* "parpydtk2/imeshdb.pyx":438
  * 
  *     def extract_field(self, str field_name,
  *         double[::1] buffer=None, reshape=False):             # <<<<<<<<<<<<<<
  *         """Extact the values from a field
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(Py_None, PyBUF_WRITABLE); if (unlikely(!__pyx_t_3.memview)) __PYX_ERR(0, 436, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_to_MemoryviewSlice_dc_double(Py_None, PyBUF_WRITABLE); if (unlikely(!__pyx_t_3.memview)) __PYX_ERR(0, 438, __pyx_L1_error)
   __pyx_k__3 = __pyx_t_3;
   __pyx_t_3.memview = NULL;
   __pyx_t_3.data = NULL;

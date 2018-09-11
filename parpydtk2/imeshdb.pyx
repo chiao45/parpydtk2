@@ -325,6 +325,8 @@ cdef class IMeshDB(object):
         >>> from parpydtk2 import *
         >>> mdb1 = IMeshDB()
         >>> mdb1.begin_create()
+        >>> # creating the meshdb
+        >>> mdb1.finish_create()
         >>> mdb1.create_field('heat flux')
         """
         cdef std_string fn = <std_string> field_name.encode('UTF-8')
