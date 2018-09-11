@@ -57,7 +57,7 @@ namespace parpydtk2 {
 
 /** \addtogroup mapper
  * @{
- */ 
+ */
 
 /// \enum Methods
 /// \brief available methods
@@ -158,6 +158,23 @@ class Mapper {
   }
 
  public:
+  /// \brief check the backend
+  /// \return if the underlying DTK2 is using our unifem forked version, then
+  /// return \a true
+  ///
+  /// In unifem version of DTK2, we modified the exception class to add a
+  /// prefix of "unifem", so it's feasible to query this information w/o adding
+  /// a new API
+  inline static bool is_unifem_backend() noexcept {
+    const static std::string prefix("unifem");
+    using namespace DataTransferKit;
+    try {
+      throw DataTransferKitException("dummy", "dummy", 1);
+    } catch (const DataTransferKitException &e) {
+      return prefix.compare(0u, prefix.size(), e.what(), 0, prefix.size()) == 0;
+    }
+  }
+
   /// \brief constructor
   /// \param[in] B input blue mesh
   /// \param[in] G input green mesh

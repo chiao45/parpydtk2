@@ -73,6 +73,17 @@ cdef class Mapper(object):
         radius used for searching on green_mesh
     """
 
+    @staticmethod
+    def is_unifem_backend():
+        """Check if the underlying DTK2 library is unifem forked version
+
+        Returns
+        -------
+        bool
+            ``True`` if the user's DTK2 is from unifem forked repo
+        """
+        return dtk.Mapper.is_unifem_backend()
+
     def __init__(self, blue, green, profiling=True):
         """Constructor
 
