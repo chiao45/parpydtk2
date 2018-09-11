@@ -17,5 +17,6 @@ before_script:
   - docker pull $BASE
 
 script:
-  - docker build --tag $DOCKER_USER/dtk:latest --file docker/Dockerfile .
+  - if [ "$TRAVIS_BRANCH" = "parallel" ]; then docker build --tag $DOCKER_USER/dtk:latest --file docker/Dockerfile .; fi
+  - if [ "$TRAVIS_BRANCH" = "dev" ]; then docker build --tag $DOCKER_USER/dtk:dev --file docker/Dockerfile .; fi
   - docker push $DOCKER_USER/dtk
