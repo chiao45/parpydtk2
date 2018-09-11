@@ -71,10 +71,10 @@ try:
     lbgids = bgids[8 * rank:8 * (rank + 1)].copy()
     blue.create_vertices(lcob)
     blue.assign_gids(lbgids)
-    blue.create_field('b')
-
     # do not use trivial global ID strategy
     blue.finish_create(False)
+    # NOTE fields must be created after the mesh has been settled
+    blue.create_field('b')
 
     ###########################
     # Build green mesh database
@@ -86,9 +86,10 @@ try:
     # only create on master rank
     if not rank:
         green.create_vertices(cog)
-    green.create_field('g')
     # since green is serial, we just use the trivial global IDs
     green.finish_create()  # empty partition is resolve here
+    # NOTE fields must be created after the mesh has been settled
+    green.create_field('g')
 
     assert green.has_empty()
 

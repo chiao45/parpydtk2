@@ -45,7 +45,7 @@ namespace parpydtk2 {
 
 /** \addtogroup mesh
  * @{
- */ 
+ */
 
 /// \class IMeshDB
 /// \brief interface mesh database, build on top of MOAB
@@ -346,27 +346,28 @@ class IMeshDB {
     }
 
     // assign some values ot fields
-    std::vector<double> values;
-    int dim = 1;
-    for (const auto &field : fields_) dim = std::max(dim, field.second->dim());
-    for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
-      values.resize(size() * dim, 0.0);
-      for (auto &field : fields_)
-        field.second->assign(locals_[set_id], values.data());
-    }
+    // std::vector<double> values;
+    // int dim = 1;
+    // for (const auto &field : fields_) dim = std::max(dim,
+    // field.second->dim()); for (unsigned set_id = 0u; set_id < vsets_.size();
+    // ++set_id) {
+    //   values.resize(size() * dim, 0.0);
+    //   for (auto &field : fields_)
+    //     field.second->assign(locals_[set_id], values.data());
+    // }
 
     // set up moab manager
     for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
       mngrs_.emplace_back(par_, vsets_[set_id], false);
     }
-    for (const auto &field : fields_) {
-      const std::string &name = *field.second;
-      const ::moab::Tag &tag = field.second->tag();
-      int set_id = field.second->set();
-      dtkfields_.emplace(std::make_pair(
-          name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
-                                           vsets_[set_id], tag))));
-    }
+    // for (const auto &field : fields_) {
+    //   const std::string &name = *field.second;
+    //   const ::moab::Tag &tag = field.second->tag();
+    //   int set_id = field.second->set();
+    //   dtkfields_.emplace(std::make_pair(
+    //       name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
+    //                                        vsets_[set_id], tag))));
+    // }
 
     // compute bboxes
     cmpt_bboxes_();
@@ -457,9 +458,25 @@ class IMeshDB {
   inline void create_field(const std::string &field_name, int dim = 1) {
     throw_error_if(dim < 1, "invalid field dimension");
     throw_error_if(
-        created_,
-        "you cannot create fields once an IMeshDB is marked as created!");
+        !created_,
+        "you can only create fields once an IMeshDB is marked as created!");
+    if (has_field(field_name)) {
+      show_warning("field: " + field_name + " already exists");
+      return;
+    }
+    // create parpydtk2 field
     fields_.create(mdb_, field_name, dim);
+    auto &field = fields_[field_name];
+    const std::string &name = field;
+    const ::moab::Tag &tag = field.tag();
+    int set_id = field.set();
+    // create dtk2 field
+    dtkfields_.emplace(std::make_pair(
+        name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
+                                         vsets_[set_id], tag))));
+    // initialize values to zero
+    std::vector<double> values(locals_[set_id].size() * dim, 0.0);
+    field.assign(locals_[set_id], values.data());
   }
 
   /// \brief check if we have a field
