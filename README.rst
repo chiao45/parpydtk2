@@ -7,6 +7,8 @@ Parallel Solution Transfer Service with DTK2 and MOAB
     :target: https://pypi.org/project/parpydtk2/
 .. image:: https://img.shields.io/pypi/l/parpydtk2.svg?branch=parallel
     :target: https://pypi.org/project/parpydtk2/
+.. image:: https://img.shields.io/badge/latest-blue.svg?logo=docker
+    :target: https://hub.docker.com/r/chiao/dtk/
 
 
 .. image:: docs/_static/logo.png
