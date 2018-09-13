@@ -26,6 +26,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void extract_gids(int *gids) except +
         void finish_create(bool trivial_gid) except +
         int size()
+        int gsize()
         bool empty()
         bool has_empty()
         const std_vector[int] &_m2s()

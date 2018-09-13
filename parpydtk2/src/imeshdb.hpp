@@ -145,7 +145,8 @@ class IMeshDB {
         created_(false),
         usergid_(false),
         empty_(false),
-        has_empty_(false) {
+        has_empty_(false),
+        gsize_(0) {
     init_();
     init_bbox_(0);
   }
@@ -348,6 +349,32 @@ class IMeshDB {
       handle_moab_error(ret);
     }
 
+    // communicate global sizes
+    if (ranks() > 1) {
+      std::vector<int> gsizes(ranks());
+      std::vector<int> gids(locals_[0].size());
+      extract_gids(gids.data());
+      int gmax = *std::max_element(gids.cbegin(), gids.cend());
+      int ret =
+          MPI_Allgather(&gmax, 1, MPI_INT, gsizes.data(), 1, MPI_INT, comm());
+      if (ret != MPI_SUCCESS) {
+        // NOTE that the default handler in mpi will directly abort, as a
+        // mapper we will not modify the mpi handler (this should be the task
+        // of application codes)
+        char msg[MPI_MAX_ERROR_STRING];
+        int dummy, err_cls;
+        MPI_Error_string(ret, msg, &dummy);
+        MPI_Error_class(ret, &err_cls);
+        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                  << ", error_class: " << err_cls << ", msg: " << msg
+                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                  << __FILE__ << "():" << __LINE__ << '\n';
+        MPI_Abort(MPI_COMM_WORLD, ret);
+      }
+      gsize_ = *std::max_element(gsizes.cbegin(), gsizes.cend());
+    } else
+      gsize_ = locals_[0].size();
+
     // assign some values ot fields
     // std::vector<double> values;
     // int dim = 1;
@@ -440,6 +467,9 @@ class IMeshDB {
 
   /// \brief check mesh size
   inline int size() const noexcept { return locals_[0].size(); }
+
+  /// \brief check the global mesh size
+  inline int gsize() const noexcept { return gsize_; }
 
   /// \brief get bounding box
   /// \param[out] v values
@@ -612,6 +642,9 @@ class IMeshDB {
 
   /// \brief comm pattern for master2slaves for handling empty partitions
   std::vector<int> m2s_;
+
+  /// \brief global size
+  int gsize_;
 
  public:
   /// \brief get the dtk fields

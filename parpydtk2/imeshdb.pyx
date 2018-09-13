@@ -67,6 +67,8 @@ cdef class IMeshDB(object):
         rank of comm
     size : int
         point cloud size, i.e. number of vertices
+    gsize : int
+        global point cloud size
     bbox : np.ndarray
         local bounding box array of shape (2,3)
     gbbox : np.ndarray
@@ -264,6 +266,11 @@ cdef class IMeshDB(object):
     def size(self):
         """int: Get the size of a set"""
         return self.mdb.get().size()
+
+    @property
+    def gsize(self):
+        """int: Get the global point cloud size"""
+        return self.mdb.get().gsize()
 
     def empty(self):
         """Check if this is an empty partition"""
