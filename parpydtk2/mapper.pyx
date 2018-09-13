@@ -105,7 +105,7 @@ cdef class Mapper(object):
         >>> # do work with mapper
         """
         pass
-    
+
     def __cinit__(self, IMeshDB blue, IMeshDB green, profiling=True):
         cdef:
             std_string version = __version__.encode('UTF-8')
@@ -115,7 +115,7 @@ cdef class Mapper(object):
         self.mp = new dtk.Mapper(blue.mdb, green.mdb, version, date, prof)
         self.blue = blue
         self.green = green
-    
+
     def __dealloc__(self):
         del self.mp
 
@@ -235,7 +235,7 @@ cdef class Mapper(object):
         :attr:`knn_g` : green knn
         """
         return self.mp.knn_b()
-    
+
     @knn_b.setter
     def knn_b(self, int knn):
         self.mp.use_knn_b(knn)
@@ -255,7 +255,7 @@ cdef class Mapper(object):
     @knn_g.setter
     def knn_g(self, int knn):
         self.mp.use_knn_g(knn)
-    
+
     @property
     def radius_b(self):
         """float: physical domain radius support for blue mesh
@@ -287,6 +287,155 @@ cdef class Mapper(object):
     @radius_g.setter
     def radius_g(self, double r):
         self.mp.use_radius_g(r)
+
+    def enable_unifem_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
+        dim=None, verbose=False, **kwargs):
+        """Automatically set up radius parameter for MMLS
+
+        .. warning::
+
+            This method should be used only when the underlying DTK2
+            installation is from UNIFEM or CHIAO45 forked versions. Otherwise,
+            you should **always** manully configure the radius parameters.
+
+        The following strategy is performed:
+
+        .. math::
+
+            r = \max(\alpha h_b, \frac{\beta h_b}{N^{1/d}}, r_u)
+
+        where :math:`h_b` is the the the maximum edge length of the global
+        bounding box (:py:attr:`~parpydtk2.IMeshDB.gbbox`); :math:`\alpha` is
+        some ratio, say 0.1 (10%); :math:`\beta` is the scaling factor the
+        the estimated mesh size, which is given by
+        :math:`\frac{h_b}{N^{1/(d-1)}}` and :math:`N` is the global mesh size
+        (:py:attr:`~parpydtk2.IMeshDB.gsize`); :math:`d` is the spatial
+        dimension; the last parameter :math:`r_u` is provided by the user thus
+        optional.
+
+        For UNIFEM/CHIAO45 DTK2, this parameter should be relatively large,
+        because the final points in the Vandermonde system is determined by
+        the column size, so that larger radius means that the system has
+        larger candidate pool.
+
+        .. warning::
+
+            Regarding the spatial dimension, since this packages is mainly for
+            interface/surface coupling thus the actual topological dimension
+            is assumed to be the one less than the spatial dimension. If this
+            is not the case, you need to explicit pass in the dimension to
+            override this default behavior.
+
+        Parameters
+        ----------
+        ref_r_b : float (optional)
+            reference user-specified blue radius, i.e. :math:`r_u` for blue
+        ref_r_g : float (optional)
+            reference user-specified green radius, i.e. :math:`r_u` for green
+        dim : int (optional)
+            explicit dimension, default is the surface topological dimension
+        verbose : bool (optional)
+            print verbose information/warning messages, default is ``False``
+        alpha : float
+            the :math:`\alpha` parameter
+        beta : float
+            the :math:`\beta` parameter
+
+        See Also
+        --------
+        :func:`is_unifem_backend` : check backend installation of DTK2
+        """
+        import warnings
+        import sys
+        if not Mapper.is_unifem_backend():
+            warnings.warn(
+                'The underlying DTK2 installation is not from UNIFEM!',
+                RuntimeWarning
+            )
+        alpha = kwargs.pop('alpha', 0.1)
+        if alpha <= 0.0:
+            if verbose:
+                warnings.warn('Invalid alpha:{}'.format(alpha), RuntimeWarning)
+            alpha = 0.1
+        beta = kwargs.pop('beta', 5.0)
+        if beta <= 0.0:
+            if verbose:
+                warnings.warn('Invalid beta:{}'.format(beta), RuntimeWarning)
+            beta = 5.0
+        # first check the method
+        if self.method != 0:
+            if verbose:
+                warnings.warn(
+                    'Force changing method from {} to MMLS'.format(self.method),
+                    RuntimeWarning
+                )
+            self.method = 0
+        if dim is None:
+            dim = self.dimension - 1  # assume surface
+        elif int(dim) < 0 or int(dim) > 3:
+            if verbose:
+                warnings.warn('Invalid dimension %r' % dim, RuntimeWarning)
+            dim = self.dimension - 1  # assume surface
+        else:
+            dim = int(dim)
+        if verbose:
+            print('Mapper dimension is: {}.'.format(dim))
+
+        # blue radius
+        b_gsize = self.blue_mesh.gsize
+        b_gbox = self.blue_mesh.gbbox
+        b_h = -1.0
+        for i in range(dim):
+            b_h = max(b_h, abs(b_gbox[0][i]-b_gbox[1][i]))
+        b_r1 = b_h * alpha
+        b_r2 = beta * b_h / np.power(b_gsize, 1./dim)
+        if ref_r_b is None:
+            ref_r_b = 0.0
+        elif float(ref_r_b) <= 0.0:
+            if verbose:
+                warnings.warn(
+                    'Invalid blue user-provided radius %r' % ref_r_b,
+                    RuntimeWarning
+                )
+            ref_r_b = 0.0
+        else:
+            ref_r_b = float(ref_r_b)
+        r_b = max(max(b_r1, b_r2), ref_r_b)
+        if verbose:
+            print('Blue radius-conf: r_box={}, r_h={}, r_user={}'.format(b_r1, b_r2, ref_r_b))
+            print('Blue final radius={}'.format(r_b))
+        self.radius_b = r_b
+
+        # green radius
+        g_gsize = self.green_mesh.gsize
+        g_gbox = self.green_mesh.gbbox
+        g_h = -1.0
+        for i in range(dim):
+            g_h = max(g_h, abs(g_gbox[0][i]-g_gbox[1][i]))
+        g_r1 = g_h * alpha
+        g_r2 = beta * g_h / np.power(g_gsize, 1./dim)
+        if ref_r_g is None:
+            ref_r_g = 0.0
+        elif float(ref_r_g) <= 0.0:
+            if verbose:
+                warnings.warn(
+                    'Invalid green user-provided radius %r' % ref_r_g,
+                    RuntimeWarning
+                )
+            ref_r_g = 0.0
+        else:
+            ref_r_g = float(ref_r_g)
+        r_g = max(max(g_r1, g_r2), ref_r_g)
+        if verbose:
+            print('Green radius-conf: r_box={}, r_h={}, r_user={}'.format(g_r1, g_r2, ref_r_g))
+            print('Green final radius={}'.format(r_g))
+        self.radius_g = r_g
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except:
+            pass
+
 
     def begin_initialization(self):
         """Initialization starter
