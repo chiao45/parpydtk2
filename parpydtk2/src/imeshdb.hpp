@@ -299,7 +299,7 @@ class IMeshDB {
           std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                     << ", error_class: " << err_cls << ", msg: " << msg
                     << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                    << __FILE__ << "():" << __LINE__ << '\n';
+                    << __FILE__ << "():" << __LINE__ << std::endl;
           MPI_Abort(MPI_COMM_WORLD, ret);
         }
         // check if "my" mesh is empty
@@ -327,7 +327,7 @@ class IMeshDB {
           std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                     << ", error_class: " << err_cls << ", msg: " << msg
                     << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                    << __FILE__ << "():" << __LINE__ << '\n';
+                    << __FILE__ << "():" << __LINE__ << std::endl;
           MPI_Abort(MPI_COMM_WORLD, ret);
         }
         int counts = std::count(empty_flags.cbegin(), empty_flags.cend(), 1);
@@ -368,7 +368,7 @@ class IMeshDB {
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                   << ", error_class: " << err_cls << ", msg: " << msg
                   << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << '\n';
+                  << __FILE__ << "():" << __LINE__ << std::endl;
         MPI_Abort(MPI_COMM_WORLD, ret);
       }
       gsize_ = *std::max_element(gsizes.cbegin(), gsizes.cend());
@@ -437,7 +437,7 @@ class IMeshDB {
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                   << ", error_class: " << err_cls << ", msg: " << msg
                   << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << '\n';
+                  << __FILE__ << "():" << __LINE__ << std::endl;
         MPI_Abort(MPI_COMM_WORLD, ret);
       }
 

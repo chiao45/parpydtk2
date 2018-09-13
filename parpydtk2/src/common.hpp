@@ -94,7 +94,7 @@ enum { root_set = 0 };
 #define show_warning(__msg)                                                  \
   do {                                                                       \
     std::cerr << "WARNING! " << __msg << ", in " << __FUNCTION__ << "() at " \
-              << __FILE__ << ':' << __LINE__ << '\n';                        \
+              << __FILE__ << ':' << __LINE__ << std::endl;                   \
                                                                              \
   } while (false)
 
@@ -108,7 +108,7 @@ enum { root_set = 0 };
 #define show_experimental(__msg)                                              \
   do {                                                                        \
     std::cerr << "EXPERIMENTAL WARNING! " << __msg << ", in " << __FUNCTION__ \
-              << "() at " << __FILE__ << ':' << __LINE__ << '\n';             \
+              << "() at " << __FILE__ << ':' << __LINE__ << std::endl;        \
                                                                               \
   } while (false)
 
@@ -119,15 +119,15 @@ enum { root_set = 0 };
 
 /// \def show_info
 /// \brief show information in parallel
-#define show_info(__msg, __rank)                         \
-  do {                                                   \
-    std::cout << '[' << __rank << "] " << __msg << '\n'; \
+#define show_info(__msg, __rank)                              \
+  do {                                                        \
+    std::cout << '[' << __rank << "] " << __msg << std::endl; \
   } while (false)
 
 /// \def show_info_master
 /// \brief show information only on master rank
 #define show_info_master(__msg, __rank) \
-  if (!__rank) std::cout << __msg << '\n'
+  if (!__rank) std::cout << __msg << std::endl
 
 /// \def streamer
 /// \brief streaming message with specific rank

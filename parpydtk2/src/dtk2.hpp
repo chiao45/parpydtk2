@@ -208,7 +208,7 @@ class Mapper {
         << string(LEN2, ' ') << "binary built time: " << __DATE__ << ' '
         << __TIME__ << '\n'
         << string(LEN2, ' ') << "total processes: " << B_->ranks() << "\n\n"
-        << string(LEN1, '-') << '\n';
+        << string(LEN1, '-') << std::endl;
 
     // init par lists
     init_parlist_();
@@ -406,7 +406,7 @@ class Mapper {
                                 << info[1] << '\n'
                                 << string(LEN2, ' ') << "green ===> blue:\n"
                                 << info[0] << '\n'
-                                << string(LEN1, '-') << '\n';
+                                << string(LEN1, '-') << std::endl;
     ready_ = true;  // trigger flag here
     timer_ = 0.0;
   }
@@ -478,7 +478,7 @@ class Mapper {
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                   << ", error_class: " << err_cls << ", msg: " << msg
                   << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << '\n';
+                  << __FILE__ << "():" << __LINE__ << std::endl;
         MPI_Abort(MPI_COMM_WORLD, ret);
       }
 
@@ -509,7 +509,7 @@ class Mapper {
       streamer_master(rank())
           << string(LEN2, ' ') << "time used: " << std::scientific << "min "
           << min_ << ", max " << max_ << ", avg " << avg << '\n';
-    streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
+    streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
   }
 
   /// \brief begin to transfer data
@@ -554,7 +554,7 @@ class Mapper {
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                   << ", error_class: " << err_cls << ", msg: " << msg
                   << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << '\n';
+                  << __FILE__ << "():" << __LINE__ << std::endl;
         MPI_Abort(MPI_COMM_WORLD, ret);
       }
 
@@ -574,7 +574,7 @@ class Mapper {
       streamer_master(rank())
           << string(LEN2, ' ') << "time used: " << std::scientific << "min "
           << min_ << ", max " << max_ << ", avg " << avg << '\n';
-    streamer_master(rank()) << '\n' << string(LEN1, '-') << '\n';
+    streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
   }
 
   ///@}
