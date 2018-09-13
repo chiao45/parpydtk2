@@ -97,6 +97,7 @@ class Mapper {
       sub_list.set("RBF Radius", 0.0);
       sub_list.set("Num Neighbors", 0);
       sub_list.set("Matching Nodes", false);
+      sub_list.set("Leaf Size", 30);
 
       auto &sub_list_search = list.sublist("Search", false);
       sub_list_search.set("Track Missed Range Entities", true);
@@ -357,6 +358,32 @@ class Mapper {
           return WU6;
       }
     return BUHMANN3;
+  }
+
+  /// \brief set the leaf size
+  /// \param[in] size the leaf size in kd-tree
+  /// \warning This method only works with unifem or chiao45 forked backend
+  inline void set_leaf_b(int size) noexcept {
+    throw_error_if(size <= 0, "invalid leaf size number");
+    opts_[1]->sublist("Point Cloud", true).set("Leaf Size", size);
+  }
+
+  /// \brief set the leaf size for green database
+  /// \param[in] size the leaf size in kd-tree
+  /// \warning This method only works with unifem or chiao45 forked backend
+  inline void set_leaf_g(int size) noexcept {
+    throw_error_if(size <= 0, "invalid leaf size number");
+    opts_[0]->sublist("Point Cloud", true).set("Leaf Size", size);
+  }
+
+  /// \brief get the blue leaf size
+  inline int leaf_b() const noexcept {
+    return opts_[1]->sublist("Point Cloud", true).get<int>("Leaf Size");
+  }
+
+  /// \brief get the green leaf size
+  inline int leaf_g() const noexcept {
+    return opts_[0]->sublist("Point Cloud", true).get<int>("Leaf Size");
   }
 
   /// \brief check blue knn

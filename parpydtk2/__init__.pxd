@@ -77,6 +77,10 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void use_radius_g(double r) except +
         int check_method()
         int check_basis()
+        void set_leaf_b(int size) except +
+        void set_leaf_g(int size) except +
+        int leaf_b()
+        int leaf_g()
         int knn_b()
         int knn_g()
         double radius_b()

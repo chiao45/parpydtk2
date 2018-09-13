@@ -71,6 +71,10 @@ cdef class Mapper(object):
         radius used for searching on blue_mesh
     radius_g : float
         radius used for searching on green_mesh
+    leaf_b : int
+        kd-tree leaf size of blue_mesh
+    leaf_g : int
+        kd-tree leaf size of green_mesh
     """
 
     @staticmethod
@@ -288,9 +292,71 @@ cdef class Mapper(object):
     def radius_g(self, double r):
         self.mp.use_radius_g(r)
 
+    @property
+    def leaf_b(self):
+        """int: get the leaf size of blue mesh for kd-tree
+        
+        .. warning::
+
+            This attribute only works when the underlying DTK2 is installed
+            from UNIFEM or CHIAO45 forked versions.
+        
+        See Also
+        --------
+        :attr:`leaf_g` : green leaf size of kd-tree
+        """
+        return self.mp.leaf_b()
+    
+    @leaf_b.setter
+    def leaf_b(self, int size):
+        if not Mapper.is_unifem_backend():
+            import warnings
+            warnings.warn(
+                'Leaf size is only tunable while the underlying DTK2 is from UNIFEM or CHIAO45 forked versions',
+                RuntimeWarning
+            )
+        self.mp.set_leaf_b(size)
+        if size < 5 or size > 50:
+            import warnings
+            warnings.warn(
+                'Too large/small leaf size:{}'.format(size),
+                RuntimeWarning
+            )
+    
+    @property
+    def leaf_g(self):
+        """int: get the leaf size of the green mesh for kd-tree
+        
+        .. warning::
+
+            This attribute only works when the underlying DTK2 is installed
+            from UNIFEM or CHIAO45 forked versions.
+
+        See Also
+        --------
+        :attr:`leaf_b` : blue leaf size of kd-tree
+        """
+        return self.mp.leaf_g()
+    
+    @leaf_g.setter
+    def leaf_g(self, int size):
+        if not Mapper.is_unifem_backend():
+            import warnings
+            warnings.warn(
+                'Leaf size is only tunable while the underlying DTK2 is from UNIFEM or CHIAO45 forked versions',
+                RuntimeWarning
+            )
+        self.mp.set_leaf_g(size)
+        if size < 5 or size > 50:
+            import warnings
+            warnings.warn(
+                'Too large/small leaf size:{}'.format(size),
+                RuntimeWarning
+            )
+
     def enable_unifem_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
         dim=None, verbose=False, **kwargs):
-        """Automatically set up radius parameter for MMLS
+        r"""Automatically set up radius parameter for MMLS
 
         .. warning::
 
@@ -321,10 +387,10 @@ cdef class Mapper(object):
         .. warning::
 
             Regarding the spatial dimension, since this packages is mainly for
-            interface/surface coupling thus the actual topological dimension
-            is assumed to be the one less than the spatial dimension. If this
-            is not the case, you need to explicit pass in the dimension to
-            override this default behavior.
+            interface/surface coupling thus the actual dimension is assumed to
+            be one less than the spatial dimension, i.e. surface topological
+            dimension. If this is not the case, the user needs to explicit pass
+            in the dimension to override this default behavior.
 
         Parameters
         ----------
@@ -385,7 +451,7 @@ cdef class Mapper(object):
         b_gsize = self.blue_mesh.gsize
         b_gbox = self.blue_mesh.gbbox
         b_h = -1.0
-        for i in range(dim):
+        for i in range(self.dimension):
             b_h = max(b_h, abs(b_gbox[0][i]-b_gbox[1][i]))
         b_r1 = b_h * alpha
         b_r2 = beta * b_h / np.power(b_gsize, 1./dim)
@@ -410,7 +476,7 @@ cdef class Mapper(object):
         g_gsize = self.green_mesh.gsize
         g_gbox = self.green_mesh.gbbox
         g_h = -1.0
-        for i in range(dim):
+        for i in range(self.dimension):
             g_h = max(g_h, abs(g_gbox[0][i]-g_gbox[1][i]))
         g_r1 = g_h * alpha
         g_r2 = beta * g_h / np.power(g_gsize, 1./dim)
