@@ -167,6 +167,9 @@ class IMeshDB {
   /// \name imesh_py_interface
   ///@{
 
+  /// \brief check created mesh database
+  inline bool created() const noexcept { return created_; }
+
   /// \brief begin to create mesh
   inline void begin_create() {
     if (created_) {

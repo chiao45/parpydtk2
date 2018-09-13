@@ -190,6 +190,8 @@ class Mapper {
         ready_(false),
         profiling_(profiling),
         timer_(0.0) {
+    throw_error_if(!(B->created() && G->created()),
+                   "the input databases must be constructured first!");
     // make sure the communicators are similar, both communicators should not
     // be null
     int flag;

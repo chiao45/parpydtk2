@@ -17,6 +17,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         int ranks()
         int rank()
         c_comm_t comm()
+        bool created()
         void begin_create() except +
         void create_vset() except +
         void create_vertices(int nv, const double *coords) except +

@@ -75,7 +75,7 @@ cdef class IMeshDB(object):
 
     def __init__(self, comm=None):
         """Constructor
-        
+
         Parameters
         ----------
         comm : MPI.Comm (optional)
@@ -123,6 +123,16 @@ cdef class IMeshDB(object):
         """int: get the rank"""
         return self.mdb.get().rank()
 
+    def created(self):
+        """Check if the mesh database has been created or not
+
+        Returns
+        -------
+        bool
+            ``True`` if :func:`finish_create` has been called
+        """
+        return self.mdb.get().created()
+
     def begin_create(self):
         """Begin to create/manupilate the mesh
 
@@ -168,9 +178,9 @@ cdef class IMeshDB(object):
 
     def extract_vertices(self):
         """Extract coordinate
-        
+
         .. warning::
-        
+
             This function should be called once you have finished
             :func:`create_vertices`.
 
@@ -208,9 +218,9 @@ cdef class IMeshDB(object):
 
     def extract_gids(self):
         """Extract global IDs/handles
-        
+
         .. warning::
-        
+
             This function should be called once you have finished
             :func:`assign_gids`.
 
@@ -232,7 +242,7 @@ cdef class IMeshDB(object):
         managers happens here.
 
         .. warning::
-        
+
             You must call this function once you have done with manupilating
             the mesh, i.e. vertices and global IDs.
 
@@ -273,7 +283,7 @@ cdef class IMeshDB(object):
         .. warning::
 
             Bounding box is valid only after :func:`finish_create`.
-        
+
         See Also
         --------
         :attr:`gbbox`: global bounding box
@@ -286,7 +296,7 @@ cdef class IMeshDB(object):
     @property
     def gbbox(self):
         """np.ndarray: global bounding box
-        
+
         The bounding box is stored simply in a 2x3 array, where the first row
         stores the maximum bounds while minimum bounds for the second row.
 
