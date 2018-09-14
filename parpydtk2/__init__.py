@@ -16,6 +16,8 @@ SPLINE : int
     flag (1) represents using `spline interpolation` method
 N2N : int
     flag (2) represents using `nearest node projection` method
+AWLS : int
+    flag (3) represents using `adaptive weighted least square` method
 WENDLAND2 : int
     flag (0) represents using `Wendland 2nd-order` RBF weights
 WENDLAND4 : int
@@ -46,9 +48,11 @@ G2B = __g2b__
 __mmls__ = 0
 __spline__ = 1
 __n2n__ = 2
+__awls__ = 3
 MMLS = __mmls__
 SPLINE = __spline__
 N2N = __n2n__
+AWLS = __awls__
 
 __wendland2__ = 0
 __wendland4__ = 1
