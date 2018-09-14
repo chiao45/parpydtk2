@@ -70,6 +70,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void use_mmls()
         void use_spline()
         void use_n2n(bool matching)
+        void use_awls()
         void set_basis(int basis) except +
         void use_knn_b(int knn) except +
         void use_knn_g(int knn) except +

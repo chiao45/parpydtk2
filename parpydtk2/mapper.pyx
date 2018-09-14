@@ -198,6 +198,14 @@ cdef class Mapper(object):
             self.mp.use_spline()
         elif m == 2:
             self.mp.use_n2n(<bool> 0)
+        elif m == 3:
+            if not Mapper.is_unifem_backend():
+                import warnings
+                warnings.warn(
+                    'The underlying DTK2 is not from UNIFEM or CHIAO45, AWLS will reduce to MMLS',
+                    RuntimeWarning
+                )
+            self.mp.use_awls()
         else:
             raise AttributeError('unknown method')
 
@@ -429,13 +437,7 @@ cdef class Mapper(object):
                 warnings.warn('Invalid beta:{}'.format(beta), RuntimeWarning)
             beta = 5.0
         # first check the method
-        if self.method != 0:
-            if verbose:
-                warnings.warn(
-                    'Force changing method from {} to MMLS'.format(self.method),
-                    RuntimeWarning
-                )
-            self.method = 0
+        self.method = 3  # set to awls
         if dim is None:
             dim = self.dimension - 1  # assume surface
         elif int(dim) < 0 or int(dim) > 3:
