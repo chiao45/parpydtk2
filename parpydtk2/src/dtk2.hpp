@@ -64,7 +64,8 @@ namespace parpydtk2 {
 enum Methods {
   MMLS = 0,  ///< modified moving least square, default
   SPLINE,    ///< spline interpolation
-  N2N        ///< node 2 node projection
+  N2N,       ///< node 2 node projection
+  AWLS       ///< adaptive weighted least square fitting
 };
 
 /// \enum BasisFunctions
@@ -98,6 +99,7 @@ class Mapper {
       sub_list.set("Num Neighbors", 0);
       sub_list.set("Matching Nodes", false);
       sub_list.set("Leaf Size", 30);
+      sub_list.set("Use QRCP Impl", true);
 
       auto &sub_list_search = list.sublist("Search", false);
       sub_list_search.set("Track Missed Range Entities", true);
@@ -242,10 +244,11 @@ class Mapper {
   /// \brief use moving least square, this is the default method
   /// \sa use_spline, use_n2n
   inline void use_mmls() noexcept {
-    FOR_DIR(i)
-    opts_[i]
-        ->sublist("Point Cloud", true)
-        .set("Map Type", "Moving Least Square Reconstruction");
+    FOR_DIR(i) {
+      auto &sub_list = opts_[i]->sublist("Point Cloud", true);
+      sub_list.set("Map Type", "Moving Least Square Reconstruction");
+      sub_list.set("Use QRCP Impl", false);
+    }
   }
 
   /// \brief use spline interpolation method
@@ -266,6 +269,14 @@ class Mapper {
       list.set("Map Type", "Node To Node");
       list.set("Matching Nodes", matching);
     }
+  }
+
+  /// \brief use adaptive weighted least square fitting
+  /// \sa use_mmls
+  inline void use_awls() noexcept {
+    use_mmls();
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Use QRCP Impl", true);
   }
 
   /// \brief set basis function, default is Wendland 4th order
@@ -329,7 +340,11 @@ class Mapper {
     // since we assign all parameters symmetrically, we just check one
     const std::string &method =
         opts_[0]->sublist("Point Cloud", true).get<std::string>("Map Type");
-    if (method == "Moving Least Square Reconstruction") return MMLS;
+    if (method == "Moving Least Square Reconstruction") {
+      if (opts_[0]->sublist("Point Cloud", true).get<bool>("Use QRCP Impl"))
+        return AWLS;
+      return MMLS;
+    }
     if (method == "Spline Interpolation") return SPLINE;
     return N2N;
   }
