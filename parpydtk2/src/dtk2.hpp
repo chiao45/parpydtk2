@@ -52,7 +52,7 @@
 #endif
 
 // tune this
-#define DEFAULT_SIGMA 3.0
+#define DEFAULT_SIGMA 2.0
 
 #endif
 
@@ -102,8 +102,8 @@ class Mapper {
       auto &sub_list = list.sublist("Point Cloud", false);
       sub_list.set("Map Type", "Moving Least Square Reconstruction");
       sub_list.set("Spatial Dimension", dim_);
-      sub_list.set("Basis Type", "Wu");  // wu2 seems better than wendland4
-      sub_list.set("Basis Order", 2);
+      sub_list.set("Basis Type", "Wendland");
+      sub_list.set("Basis Order", 21);  // NOTE that this is dim1, order 2
       sub_list.set("Type of Search", "Radius");
       sub_list.set("RBF Radius", 0.0);
       sub_list.set("Num Neighbors", 0);
@@ -117,6 +117,15 @@ class Mapper {
 
       auto &sub_list_search = list.sublist("Search", false);
       sub_list_search.set("Track Missed Range Entities", true);
+    }
+    // if not unifem backend, then reset the basis to be compatible with
+    // the original DTK2
+    if (!is_unifem_backend()) {
+      FOR_DIR(i) {
+        auto &sub_list = opts_[i]->sublist("Point Cloud", true);
+        sub_list.set("Basis Type", "Wu");
+        sub_list.set("Basis Order", 2);
+      }
     }
   }
 
@@ -390,6 +399,8 @@ class Mapper {
           return WENDLAND4;
         case 6:
           return WENDLAND6;
+        case 21:
+          return WENDLAND21;
       }
 
     if (basis == "Wu") switch (order) {
