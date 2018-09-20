@@ -18,6 +18,8 @@ N2N : int
     flag (2) represents using `nearest node projection` method
 AWLS : int
     flag (3) represents using `adaptive weighted least square` method
+N2N_MATCH : int
+    flag (4) represents using `matching n2n` method
 WENDLAND2 : int
     flag (0) represents using `Wendland 2nd-order` RBF weights
 WENDLAND4 : int
@@ -49,10 +51,12 @@ __mmls__ = 0
 __spline__ = 1
 __n2n__ = 2
 __awls__ = 3
+__n2n_match__ = 4
 MMLS = __mmls__
 SPLINE = __spline__
 N2N = __n2n__
 AWLS = __awls__
+N2N_MATCH = __n2n_match__
 
 __wendland2__ = 0
 __wendland4__ = 1
