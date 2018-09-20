@@ -68,7 +68,8 @@ enum Methods {
   MMLS = 0,  ///< modified moving least square, default
   SPLINE,    ///< spline interpolation
   N2N,       ///< node 2 node projection
-  AWLS       ///< adaptive weighted least square fitting
+  AWLS,      ///< adaptive weighted least square fitting
+  N2N_MATCH  ///< matching interface node to node
 };
 
 /// \enum BasisFunctions
@@ -95,7 +96,7 @@ class Mapper {
       auto &sub_list = list.sublist("Point Cloud", false);
       sub_list.set("Map Type", "Moving Least Square Reconstruction");
       sub_list.set("Spatial Dimension", dim_);
-      sub_list.set("Basis Type", "Wu"); // wu2 seems better than wendland4
+      sub_list.set("Basis Type", "Wu");  // wu2 seems better than wendland4
       sub_list.set("Basis Order", 2);
       sub_list.set("Type of Search", "Radius");
       sub_list.set("RBF Radius", 0.0);
@@ -106,6 +107,7 @@ class Mapper {
       sub_list.set("Resolve Discontinuity", false);  // by default, turn off
       sub_list.set("Indicator Threshold", DEFAULT_SIGMA);
       sub_list.set("Indicator Output File", std::string(""));
+      sub_list.set("Local Rho Scaling", -1.0);
 
       auto &sub_list_search = list.sublist("Search", false);
       sub_list_search.set("Track Missed Range Entities", true);
@@ -195,13 +197,14 @@ class Mapper {
   /// \param[in] profiling whether do simple profiling, i.e. wtime
   explicit Mapper(std::shared_ptr<IMeshDB> B, std::shared_ptr<IMeshDB> G,
                   const std::string &version = "", const std::string &date = "",
-                  bool profiling = true)
+                  bool profiling = true, bool verbose = true)
       : B_(B),
         G_(G),
         dim_(3),
         ready_(false),
         profiling_(profiling),
-        timer_(0.0) {
+        timer_(0.0),
+        verbose_(verbose) {
     throw_error_if(!(B->created() && G->created()),
                    "the input databases must be constructured first!");
     // make sure the communicators are similar, both communicators should not
@@ -212,15 +215,16 @@ class Mapper {
                    "the green and blue comms must be identical");
     using std::string;
     // NOTE pass in time should have "%b %d %Y %H:%M:%S" format
-    streamer_master(B_->rank())
-        << '\n'
-        << string(LEN1, '-') << "\n\n"
-        << string(LEN2, ' ') << "parpydtk2 version: " << version << '\n'
-        << string(LEN2, ' ') << "mapper created time: " << date << '\n'
-        << string(LEN2, ' ') << "binary built time: " << __DATE__ << ' '
-        << __TIME__ << '\n'
-        << string(LEN2, ' ') << "total processes: " << B_->ranks() << "\n\n"
-        << string(LEN1, '-') << std::endl;
+    if (verbose_)
+      streamer_master(B_->rank())
+          << '\n'
+          << string(LEN1, '-') << "\n\n"
+          << string(LEN2, ' ') << "parpydtk2 version: " << version << '\n'
+          << string(LEN2, ' ') << "mapper created time: " << date << '\n'
+          << string(LEN2, ' ') << "binary built time: " << __DATE__ << ' '
+          << __TIME__ << '\n'
+          << string(LEN2, ' ') << "total processes: " << B_->ranks() << "\n\n"
+          << string(LEN1, '-') << std::endl;
 
     // init par lists
     init_parlist_();
@@ -355,6 +359,8 @@ class Mapper {
       return MMLS;
     }
     if (method == "Spline Interpolation") return SPLINE;
+    if (opts_[0]->sublist("Point Cloud", true).get<bool>("Matching Nodes"))
+      return N2N_MATCH;
     return N2N;
   }
 
@@ -477,6 +483,21 @@ class Mapper {
   /// \brief wipe indicator file
   inline void _wipe_ind_file() noexcept { _set_ind_file(""); }
 
+  /// \brief set local scaling rho
+  /// \param[in] rho scaling factor
+  /// \note This only works with QRCP implementation, or AWLS method
+  inline void set_rho(double rho) noexcept {
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Local Rho Scaling", rho);
+  }
+
+  /// \brief get local scaling rho
+  inline double rho() const noexcept {
+    return opts_[0]
+        ->sublist("Point Cloud", true)
+        .get<double>("Local Rho Scaling");
+  }
+
   /** @}*/
 
   /// \brief get blue mesh
@@ -492,16 +513,18 @@ class Mapper {
     throw_error_if(!B_->ready() || !G_->ready(),
                    "at least one of the meshes is not ready");
     // parse parameter list
-    string info[2];
-    FOR_DIR(i)
-    info[i] = parse_list_(*opts_[i]);
-    streamer_master(B_->rank()) << '\n'
-                                << string(LEN1, '-') << "\n\n"
-                                << string(LEN2, ' ') << "blue ===> green:\n"
-                                << info[1] << '\n'
-                                << string(LEN2, ' ') << "green ===> blue:\n"
-                                << info[0] << '\n'
-                                << string(LEN1, '-') << std::endl;
+    if (verbose_) {
+      string info[2];
+      FOR_DIR(i)
+      info[i] = parse_list_(*opts_[i]);
+      streamer_master(B_->rank()) << '\n'
+                                  << string(LEN1, '-') << "\n\n"
+                                  << string(LEN2, ' ') << "blue ===> green:\n"
+                                  << info[1] << '\n'
+                                  << string(LEN2, ' ') << "green ===> blue:\n"
+                                  << info[0] << '\n'
+                                  << string(LEN1, '-') << std::endl;
+    }
     ready_ = true;  // trigger flag here
     timer_ = 0.0;
   }
@@ -586,25 +609,27 @@ class Mapper {
       avg = min_ = max_ = timer_;
 
     // streaming messages
-    using std::string;
+    if (verbose_) {
+      using std::string;
 
-    streamer_master(rank())
-        << string(LEN1, '-') << "\n\n"
-        << string(LEN2, ' ') << "total registered coupling fields: "
-        << operators_[0].size() + operators_[1].size() << '\n'
-        << string(LEN2, ' ') << "blue ===> green:\n";
-    for (const auto &op : operators_[0])
-      streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.first << ':'
-                              << op.first.second << '\n';
-    streamer_master(rank()) << string(LEN2, ' ') << "green ===> blue:\n";
-    for (const auto &op : operators_[1])
-      streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.second << ':'
-                              << op.first.first << '\n';
-    if (profiling_)
       streamer_master(rank())
-          << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-          << min_ << ", max " << max_ << ", avg " << avg << '\n';
-    streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+          << string(LEN1, '-') << "\n\n"
+          << string(LEN2, ' ') << "total registered coupling fields: "
+          << operators_[0].size() + operators_[1].size() << '\n'
+          << string(LEN2, ' ') << "blue ===> green:\n";
+      for (const auto &op : operators_[0])
+        streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.first
+                                << ':' << op.first.second << '\n';
+      streamer_master(rank()) << string(LEN2, ' ') << "green ===> blue:\n";
+      for (const auto &op : operators_[1])
+        streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.second
+                                << ':' << op.first.first << '\n';
+      if (profiling_)
+        streamer_master(rank())
+            << string(LEN2, ' ') << "time used: " << std::scientific << "min "
+            << min_ << ", max " << max_ << ", avg " << avg << '\n';
+      streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+    }
   }
 
   /// \brief begin to transfer data
@@ -661,15 +686,17 @@ class Mapper {
     } else if (profiling_)
       avg = min_ = max_ = timer_;
 
-    using std::string;
+    if (verbose_) {
+      using std::string;
 
-    streamer_master(rank()) << string(LEN1, '-') << "\n\n"
-                            << string(LEN2, ' ') << "transfer finished\n";
-    if (profiling_)
-      streamer_master(rank())
-          << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-          << min_ << ", max " << max_ << ", avg " << avg << '\n';
-    streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+      streamer_master(rank()) << string(LEN1, '-') << "\n\n"
+                              << string(LEN2, ' ') << "transfer finished\n";
+      if (profiling_)
+        streamer_master(rank())
+            << string(LEN2, ' ') << "time used: " << std::scientific << "min "
+            << min_ << ", max " << max_ << ", avg " << avg << '\n';
+      streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+    }
   }
 
   ///@}
@@ -691,6 +718,9 @@ class Mapper {
 
   /// \brief a simple timer buffer
   double timer_;
+
+  /// \brief verbose output
+  bool verbose_;
 
   /// \brief parameter list
   std::unique_ptr<Teuchos::ParameterList> opts_[2];
