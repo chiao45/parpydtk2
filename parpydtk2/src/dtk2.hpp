@@ -51,6 +51,9 @@
 #define LEN2 15
 #endif
 
+// tune this
+#define DEFAULT_SIGMA 3.0
+
 #endif
 
 namespace parpydtk2 {
@@ -92,14 +95,17 @@ class Mapper {
       auto &sub_list = list.sublist("Point Cloud", false);
       sub_list.set("Map Type", "Moving Least Square Reconstruction");
       sub_list.set("Spatial Dimension", dim_);
-      sub_list.set("Basis Type", "Wendland");
-      sub_list.set("Basis Order", 4);
+      sub_list.set("Basis Type", "Wu"); // wu2 seems better than wendland4
+      sub_list.set("Basis Order", 2);
       sub_list.set("Type of Search", "Radius");
       sub_list.set("RBF Radius", 0.0);
       sub_list.set("Num Neighbors", 0);
       sub_list.set("Matching Nodes", false);
       sub_list.set("Leaf Size", 30);
       sub_list.set("Use QRCP Impl", true);
+      sub_list.set("Resolve Discontinuity", false);  // by default, turn off
+      sub_list.set("Indicator Threshold", DEFAULT_SIGMA);
+      sub_list.set("Indicator Output File", std::string(""));
 
       auto &sub_list_search = list.sublist("Search", false);
       sub_list_search.set("Track Missed Range Entities", true);
@@ -113,8 +119,11 @@ class Mapper {
     auto &sub_list = list.sublist("Point Cloud", true);
     const bool rs = sub_list.get<string>("Type of Search") == "Radius";
     std::ostringstream ss;
-    ss << string(LEN2, ' ') << "map type: " << sub_list.get<string>("Map Type")
-       << '\n'
+    string map_type = sub_list.get<string>("Map Type");
+    const bool use_qrcp = sub_list.get<bool>("Use QRCP Impl");
+    if (map_type == "Moving Least Square Reconstruction" && use_qrcp)
+      map_type = "Adaptive Weighted Least Square Fitting";
+    ss << string(LEN2, ' ') << "map type: " << map_type << '\n'
        << string(LEN2, ' ')
        << "spatial dimension: " << sub_list.get<int>("Spatial Dimension")
        << '\n'
@@ -375,6 +384,36 @@ class Mapper {
     return BUHMANN3;
   }
 
+  /// \brief check blue knn
+  /// \note if blue does not use knn, then negative value returned
+  inline int knn_b() const noexcept {
+    return get_search<true>("Nearest Neighbor", "Num Neighbors", -1);
+  }
+
+  /// \brief check green knn
+  inline int knn_g() const noexcept {
+    return get_search<false>("Nearest Neighbor", "Num Neighbors", -1);
+  }
+
+  /// \brief check blue radius
+  /// \note if blue does not use radius, then -1.0 is returned
+  inline double radius_b() const noexcept {
+    return get_search<true>("Radius", "RBF Radius", -1.0);
+  }
+
+  /// \brief check green radius
+  inline double radius_g() const noexcept {
+    return get_search<false>("Radius", "RBF Radius", -1.0);
+  }
+
+  /// \brief get the dimension
+  inline int dimension() const noexcept { return dim_; }
+
+  /**
+   * \name QRCP_ONLY
+   * @{
+   */
+
   /// \brief set the leaf size
   /// \param[in] size the leaf size in kd-tree
   /// \warning This method only works with unifem or chiao45 forked backend
@@ -401,30 +440,44 @@ class Mapper {
     return opts_[0]->sublist("Point Cloud", true).get<int>("Leaf Size");
   }
 
-  /// \brief check blue knn
-  /// \note if blue does not use knn, then negative value returned
-  inline int knn_b() const noexcept {
-    return get_search<true>("Nearest Neighbor", "Num Neighbors", -1);
+  /// \brief set resolving discontinuities flag
+  /// \param[in] flag true for enable the service
+  /// \note This only works with QRCP implementation, or AWLS method
+  inline void set_resolve_disc_flag(bool flag) noexcept {
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Resolve Discontinuity", flag);
   }
 
-  /// \brief check green knn
-  inline int knn_g() const noexcept {
-    return get_search<false>("Nearest Neighbor", "Num Neighbors", -1);
+  /// \brief set the sigma for smoothness indicator threshold
+  /// \param[in] sigma threshold
+  /// \note This only works with QRCP implementation, or AWLS method
+  inline void set_disc_sigma(double sigma) noexcept {
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Indicator Threshold", sigma);
   }
 
-  /// \brief check blue radius
-  /// \note if blue does not use radius, then -1.0 is returned
-  inline double radius_b() const noexcept {
-    return get_search<true>("Radius", "RBF Radius", -1.0);
+  /// \brief get the sigma
+  /// \sa set_disc_sigma
+  /// \note This only works with QRCP implementation, or AWLS method
+  inline double disc_sigma() const noexcept {
+    return opts_[0]
+        ->sublist("Point Cloud", true)
+        .get<double>("Indicator Threshold");
   }
 
-  /// \brief check green radius
-  inline double radius_g() const noexcept {
-    return get_search<false>("Radius", "RBF Radius", -1.0);
+  /// \brief set the indicator tuning filename
+  /// \param[in] fn filename
+  /// \note internal use
+  /// \note This only works with QRCP implementation, or AWLS method
+  inline void _set_ind_file(const std::string &fn) noexcept {
+    FOR_DIR(i)
+    opts_[i]->sublist("Point Cloud", true).set("Indicator Output File", fn);
   }
 
-  /// \brief get the dimension
-  inline int dimension() const noexcept { return dim_; }
+  /// \brief wipe indicator file
+  inline void _wipe_ind_file() noexcept { _set_ind_file(""); }
+
+  /** @}*/
 
   /// \brief get blue mesh
   inline std::shared_ptr<IMeshDB> blue_mesh() const noexcept { return B_; }
