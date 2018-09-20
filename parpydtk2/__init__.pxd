@@ -87,6 +87,11 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         double radius_b()
         double radius_g()
         int dimension()
+        void set_resolve_disc_flag(bool flag)
+        void set_disc_sigma(double sigma)
+        double disc_sigma()
+        void _set_ind_file(const std_string &fn)
+        void _wipe_ind_file()
         shared_ptr[IMeshDB] blue_mesh()
         shared_ptr[IMeshDB] green_mesh()
         void begin_initialization() except +

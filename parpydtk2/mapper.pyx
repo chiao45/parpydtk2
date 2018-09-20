@@ -361,6 +361,65 @@ cdef class Mapper(object):
                 'Too large/small leaf size:{}'.format(size),
                 RuntimeWarning
             )
+    
+    def enable_resolving_disc(self):
+        """Enable resolving discontinuities service
+
+        .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
+        """
+        import warnings
+        import sys
+        if not Mapper.is_unifem_backend():
+            warnings.warn(
+                'The underlying DTK2 installation is not from UNIFEM!',
+                RuntimeWarning
+            )
+        self.mp.set_resolve_disc_flag(<bool> 1)
+
+    def disable_resolving_disc(self):
+        """Disable resolving discontinuities service
+
+        .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
+        """
+        import warnings
+        import sys
+        if not Mapper.is_unifem_backend():
+            warnings.warn(
+                'The underlying DTK2 installation is not from UNIFEM!',
+                RuntimeWarning
+            )
+        self.mp.set_resolve_disc_flag(<bool> 0)
+
+    @property
+    def disc_sigma(self):
+        """float: The smoothness indicator value threshold"""
+        return self.mp.disc_sigma()
+    
+    @disc_sigma.setter
+    def disc_sigma(self, double sigma):
+        import warnings
+        import sys
+        if not Mapper.is_unifem_backend():
+            warnings.warn(
+                'The underlying DTK2 installation is not from UNIFEM!',
+                RuntimeWarning
+            )
+        self.mp.set_disc_sigma(sigma)
+    
+    def _set_disc_file(self, str filename):
+        # WARNING! should be used in serial for tuning parameter!
+        cdef std_string fn = filename.encode('UTF-8')
+        import warnings
+        import sys
+        if not Mapper.is_unifem_backend():
+            warnings.warn(
+                'The underlying DTK2 installation is not from UNIFEM!',
+                RuntimeWarning
+            )
+        self.mp._set_ind_file(fn)
+    
+    def _wipe_disc_file(self):
+        self.mp._wipe_ind_file()
 
     def enable_unifem_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
         dim=None, verbose=False, **kwargs):
