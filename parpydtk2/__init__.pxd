@@ -61,7 +61,8 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
             shared_ptr[IMeshDB] G,
             const std_string &version,
             const std_string &date,
-            bool profiling
+            bool profiling,
+            bool verbose
         ) except +
         int ranks()
         int rank()
@@ -92,6 +93,8 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         double disc_sigma()
         void _set_ind_file(const std_string &fn)
         void _wipe_ind_file()
+        void set_rho(double rho)
+        double rho()
         shared_ptr[IMeshDB] blue_mesh()
         shared_ptr[IMeshDB] green_mesh()
         void begin_initialization() except +
