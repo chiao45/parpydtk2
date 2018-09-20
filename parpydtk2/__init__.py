@@ -34,6 +34,8 @@ WU6 : int
     flag (5) represents using `Wu 6th-order` RBF weights
 BUHMANN3 : int
     flag (6) represents using `Buhmann 3rd-order` RBF weights
+WENDLAND21 : int
+    flag (7) represents using `Wendland 2nd-order 1st dimension` RBF weights
 """
 
 import sys
@@ -61,9 +63,11 @@ N2N_MATCH = __n2n_match__
 __wendland2__ = 0
 __wendland4__ = 1
 __wendland6__ = 2
+__wendland21__ = 7
 WENDLAND2 = __wendland2__
 WENDLAND4 = __wendland4__
 WENDLAND6 = __wendland6__
+WENDLAND21 = __wendland21__
 
 __wu2__ = 3
 __wu4__ = 4

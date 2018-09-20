@@ -81,8 +81,14 @@ enum BasisFunctions {
   WU2,            ///< Wu 2nd order
   WU4,            ///< Wu 4th order
   WU6,            ///< Wu 6th order
-  BUHMANN3        ///< Buhmann 3or order
+  BUHMANN3,       ///< Buhmann 3or order
+  WENDLAND21      ///< Wendland 2nd order dimension 1
 };
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#define BASIS_BOUND WENDLAND21
+#endif
 
 /// \class Mapper
 /// \brief the mapper interface for interface solution transfer
@@ -296,8 +302,8 @@ class Mapper {
   /// \param[in] basis basis function and order
   /// \sa BasisFunctions
   inline void set_basis(int basis) {
-    throw_error_if(basis < 0 || basis > BUHMANN3, "unknown method");
-    if (basis != BUHMANN3) {
+    throw_error_if(basis < 0 || basis > BASIS_BOUND, "unknown method");
+    if (basis < BUHMANN3) {
       const bool wld = basis < 3;
       const std::string bm = wld ? "Wendland" : "Wu";
       basis %= 3;
@@ -308,11 +314,18 @@ class Mapper {
         list.set("Basis Order", order);
       }
       return;
-    }
-    FOR_DIR(i) {
-      auto &list = opts_[i]->sublist("Point Cloud", true);
-      list.set("Basis Type", "Buhmann");
-      list.set("Basis Order", 3);
+    } else if (basis == BUHMANN3) {
+      FOR_DIR(i) {
+        auto &list = opts_[i]->sublist("Point Cloud", true);
+        list.set("Basis Type", "Buhmann");
+        list.set("Basis Order", 3);
+      }
+    } else {
+      FOR_DIR(i) {
+        auto &list = opts_[i]->sublist("Point Cloud", true);
+        list.set("Basis Type", "Wendland");
+        list.set("Basis Order", 21);
+      }
     }
   }
 
