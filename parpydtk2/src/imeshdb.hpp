@@ -255,7 +255,7 @@ class IMeshDB {
         handle_moab_error(ret);
       }
     } else {
-      show_warning_if(!usergid_ && (ranks() > 1),
+      show_warning_if(!usergid_ && (ranks() > 1) && locals_[0].size(),
                       "critical!! Global IDs are missing!");
     }
     if (ranks() > 1) {
