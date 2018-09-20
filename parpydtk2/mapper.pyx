@@ -733,9 +733,9 @@ cdef class Mapper(object):
             setattr(self, key, v)
         elif key == 'resolve_disc':
             if v:
-                self.set_resolve_disc_flag(True)
+                self.enable_resolving_disc()
             else:
-                self.set_resolve_disc_flag(False)
+                self.disable_resolving_disc()
         elif key == '_ind_file':
             if v:
                 self._set_ind_file(v)
