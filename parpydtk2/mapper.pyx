@@ -37,6 +37,21 @@ __author__ = 'Qiao Chen'
 __copyright__ = 'Copyright 2018, Qiao Chen'
 
 
+_ATTR_PARS = {
+    'method',
+    'basis',
+    'dimension',
+    'knn_b',
+    'knn_g',
+    'radius_b',
+    'radius_g',
+    'leaf_b',
+    'leaf_g',
+    'disc_sigma',
+    'rho'
+}
+
+
 cdef class Mapper(object):
     """DTK2 wrapper
 
@@ -75,7 +90,19 @@ cdef class Mapper(object):
         kd-tree leaf size of blue_mesh
     leaf_g : int
         kd-tree leaf size of green_mesh
+    disc_sigma : double
+        indicator threshold for resolving discontinuities
+    rho : double
+        local Vandermonde system row scaling factor
     """
+
+    @staticmethod
+    def parameter_keys():
+        from copy import deepcopy
+        keys = deepcopy(_ATTR_PARS)
+        keys.add('resolve_disc')
+        keys.add('_ind_file')
+        return keys
 
     @staticmethod
     def is_unifem_backend():
@@ -88,7 +115,7 @@ cdef class Mapper(object):
         """
         return dtk.Mapper.is_unifem_backend()
 
-    def __init__(self, blue, green, profiling=True):
+    def __init__(self, blue, green, profiling=True, verbose=True, **kwargs):
         """Constructor
 
         Parameters
@@ -99,6 +126,8 @@ cdef class Mapper(object):
             green mesh participant
         profiling : bool (optional)
             whether or not do timing report, default is ``True``.
+        verbose : bool (optional)
+            whether or not verbose printing, higher priority than ``profiling``
 
         Examples
         --------
@@ -110,13 +139,15 @@ cdef class Mapper(object):
         """
         pass
 
-    def __cinit__(self, IMeshDB blue, IMeshDB green, profiling=True):
+    def __cinit__(self, IMeshDB blue, IMeshDB green, *,
+        profiling=True, verbose=True, **kwargs):
         cdef:
             std_string version = __version__.encode('UTF-8')
             std_string date = \
                 datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').encode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
-        self.mp = new dtk.Mapper(blue.mdb, green.mdb, version, date, prof)
+            bool verb = <bool> 1 if verbose else <bool> 0
+        self.mp = new dtk.Mapper(blue.mdb, green.mdb, version, date, prof, verb)
         self.blue = blue
         self.green = green
 
@@ -206,6 +237,8 @@ cdef class Mapper(object):
                     RuntimeWarning
                 )
             self.mp.use_awls()
+        elif m == 4:
+            self.mp.use_n2n(<bool> 1)
         else:
             raise AttributeError('unknown method')
 
@@ -220,6 +253,11 @@ cdef class Mapper(object):
             `True` if the interfaces are matching
         """
         cdef bool flag = <bool> 1 if matching else <bool> 0
+        import warnings
+        warnings.warn(
+            'This method will be deprecated, direct assign method with N2N_MATCH',
+            DeprecationWarning
+        )
         self.mp.use_n2n(flag)
 
     @property
@@ -368,7 +406,6 @@ cdef class Mapper(object):
         .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
         """
         import warnings
-        import sys
         if not Mapper.is_unifem_backend():
             warnings.warn(
                 'The underlying DTK2 installation is not from UNIFEM!',
@@ -382,7 +419,6 @@ cdef class Mapper(object):
         .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
         """
         import warnings
-        import sys
         if not Mapper.is_unifem_backend():
             warnings.warn(
                 'The underlying DTK2 installation is not from UNIFEM!',
@@ -398,7 +434,6 @@ cdef class Mapper(object):
     @disc_sigma.setter
     def disc_sigma(self, double sigma):
         import warnings
-        import sys
         if not Mapper.is_unifem_backend():
             warnings.warn(
                 'The underlying DTK2 installation is not from UNIFEM!',
@@ -406,11 +441,10 @@ cdef class Mapper(object):
             )
         self.mp.set_disc_sigma(sigma)
     
-    def _set_disc_file(self, str filename):
+    def _set_ind_file(self, str filename):
         # WARNING! should be used in serial for tuning parameter!
         cdef std_string fn = filename.encode('UTF-8')
         import warnings
-        import sys
         if not Mapper.is_unifem_backend():
             warnings.warn(
                 'The underlying DTK2 installation is not from UNIFEM!',
@@ -418,8 +452,17 @@ cdef class Mapper(object):
             )
         self.mp._set_ind_file(fn)
     
-    def _wipe_disc_file(self):
+    def _wipe_ind_file(self):
         self.mp._wipe_ind_file()
+    
+    @property
+    def rho(self):
+        "float: local scaling factor"
+        return self.mp.rho()
+
+    @rho.setter
+    def rho(self, double v):
+        self.mp.set_rho(v)
 
     def enable_unifem_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
         dim=None, verbose=False, **kwargs):
@@ -564,7 +607,7 @@ cdef class Mapper(object):
             pass
 
 
-    def begin_initialization(self):
+    def begin_initialization(self, **kwargs):
         """Initialization starter
 
         This is a must-call function in order to indicate mapper that you are
@@ -577,7 +620,7 @@ cdef class Mapper(object):
         """
         self.mp.begin_initialization()
 
-    def register_coupling_fields(self, str bf, str gf, bool direct):
+    def register_coupling_fields(self, str bf, str gf, bool direct, **kwargs):
         """register a coupled fields
 
         .. note:: we use boolean to indicate direction
@@ -615,7 +658,7 @@ cdef class Mapper(object):
             bool dr = <bool> 1 if direct else <bool> 0
         return self.mp.has_coupling_fields(bf_, gf_, dr)
 
-    def end_initialization(self):
+    def end_initialization(self, **kwargs):
         """Initialization closer
 
         This is a must-call function in order to tell the mapper we are ready
@@ -626,7 +669,7 @@ cdef class Mapper(object):
         """
         self.mp.end_initialization()
 
-    def begin_transfer(self):
+    def begin_transfer(self, **kwargs):
         """Transfer starter
 
         This is a must-call function to inidate the beginning of a transferring
@@ -639,7 +682,7 @@ cdef class Mapper(object):
         """
         self.mp.begin_transfer()
 
-    def transfer_data(self, str bf, str gf, bool direct):
+    def transfer_data(self, str bf, str gf, bool direct, **kwargs):
         """Transfer (bf, gf) in the ``direct`` direction
 
         Parameters
@@ -668,7 +711,7 @@ cdef class Mapper(object):
             tag_src = gf
         self.mp.transfer_data(bf_, gf_, dr)
 
-    def end_transfer(self):
+    def end_transfer(self, **kwargs):
         """Transfer closer
 
         This is a must-call function to indicate we have finished a sequence of
@@ -679,3 +722,24 @@ cdef class Mapper(object):
         :func:`begin_transfer` : transfer starter
         """
         self.mp.end_transfer()
+
+    def __getitem__(self, str key):
+        if key in _ATTR_PARS:
+            return getattr(self, key)
+        raise KeyError('{} is not a valid key'.format(key))
+
+    def __setitem__(self, str key, v):
+        if key in _ATTR_PARS:
+            setattr(self, key, v)
+        elif key == 'resolve_disc':
+            if v:
+                self.set_resolve_disc_flag(True)
+            else:
+                self.set_resolve_disc_flag(False)
+        elif key == '_ind_file':
+            if v:
+                self._set_ind_file(v)
+            else:
+                self._wipe_ind_file()
+        else:
+            raise KeyError('{} is not a valid key'.format(key))
