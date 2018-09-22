@@ -415,19 +415,19 @@ class Mapper {
   }
 
   /// \brief use knn for blue mesh
-  /// \param[in] knn number of nearest neighbors
-  inline void use_knn_b(int knn) {
-    throw_error_if(knn <= 0, "invalid number of knn");
-    show_warning_if(knn < 3, "potentially to small knn");
-    set_search<true>("Nearest Neighbor", "Num Neighbors", knn);
+  /// \deprecated No longer support knn
+  inline void use_knn_b(int) {
+    // throw_error_if(knn <= 0, "invalid number of knn");
+    show_warning("knn is deprecated, fallback to radius with r=0...");
+    set_search<true>("Radius", "RBF Radius", 0.0);
   }
 
   /// \brief use knn for green mesh
-  /// \param[in] knn number of nearest neighbors
-  inline void use_knn_g(int knn) {
-    throw_error_if(knn <= 0, "invalid number of knn");
-    show_warning_if(knn < 3, "potentially to small knn");
-    set_search<false>("Nearest Neighbor", "Num Neighbors", knn);
+  /// \deprecated No longer support knn
+  inline void use_knn_g(int) {
+    // throw_error_if(knn <= 0, "invalid number of knn");
+    show_warning("knn is deprecated, fallback to radius with r=0...");
+    set_search<false>("Radius", "RBF Radius", 0.0);
   }
 
   /// \brief use radius for blue

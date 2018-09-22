@@ -41,8 +41,6 @@ _ATTR_PARS = {
     'method',
     'basis',
     'dimension',
-    'knn_b',
-    'knn_g',
     'radius_b',
     'radius_g',
     'leaf_b',
@@ -57,8 +55,10 @@ cdef class Mapper(object):
 
     The meshless methods in DTK2, including `modified moving least square`,
     `spline interpolation` and `nearest node projection` methods are wrapped
-    within this class. The most advanced method is the MMLS fitting, which
-    is my personal recommendataion.
+    within this class.
+
+    In addition, if you build DTK2 from UNIFEM/CHIAO45 forked verions, then
+    you can use the `adaptive weighted least square` fitting method.
 
     Attributes
     ----------
@@ -78,10 +78,6 @@ cdef class Mapper(object):
         method flag, either MMLS, SPLINE, or N2N
     basis : int
         flag of basis function for weighting schemes used by MMLS and SPLINE
-    knn_b : int
-        k-nearest neighborhood for searching on blue_mesh
-    knn_g : int
-        k-nearest neighborhood for searching on green_mesh
     radius_b : float
         radius used for searching on blue_mesh
     radius_g : float
@@ -286,38 +282,6 @@ cdef class Mapper(object):
     @basis.setter
     def basis(self, int bf):
         self.mp.set_basis(bf)
-
-    @property
-    def knn_b(self):
-        """int: KNN of blue mesh
-
-        .. note:: if blue does not use KNN, then -1 returned
-
-        See Also
-        --------
-        :attr:`knn_g` : green knn
-        """
-        return self.mp.knn_b()
-
-    @knn_b.setter
-    def knn_b(self, int knn):
-        self.mp.use_knn_b(knn)
-
-    @property
-    def knn_g(self):
-        """int: KNN of green mesh
-
-        .. note:: if green does not use KNN, then -1 returned
-
-        See Also
-        --------
-        :attr:`knn_b` : blue knn
-        """
-        return self.mp.knn_g()
-
-    @knn_g.setter
-    def knn_g(self, int knn):
-        self.mp.use_knn_g(knn)
 
     @property
     def radius_b(self):
