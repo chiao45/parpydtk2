@@ -13,6 +13,7 @@ Welcome to ParPyDTK2's documentation!
     intro
     install
     details
+    unifem
     demo
     api
 

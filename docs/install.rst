@@ -37,7 +37,7 @@ Install `MOAB`_
 
 The `MOAB official README <https://bitbucket.org/fathomteam/moab>`_ has a
 very clear description of the installation process. Here we take an excerpt
-from our `MOAB Docker image building script <https://github.com/unifem/cht-coupler/blob/meshdb-bin/Dockerfile#L13>`_:
+of our `MOAB Docker image building script <https://github.com/unifem/cht-coupler/blob/meshdb-bin/Dockerfile#L13>`_:
 
 .. code-block:: console
 
@@ -68,24 +68,24 @@ from our `MOAB Docker image building script <https://github.com/unifem/cht-coupl
     $ make && sudo make install
 
 Notice that this is for system installation. Install to your preferred
-locations if you don't have root access. Also, turn off those optional packages
-if you don't have them, only MPI and HDF5 are necessary.
+locations if you don't have the root access. Also, turn off those optional
+packages if you don't have them, only MPI and HDF5 are necessary.
 
 .. warning:: You must build it into a shared object!
 
 .. note::
 
-    If you use Ubuntu >= 17.10, all those optional packages are available
-    through ``apt``.
+    If you use Ubuntu >= 17.10, all those optional packages are likely to be
+    available through ``apt``.
 
 .. _install_dtk2:
 
 Install `DTK2`_
 ---------------
 
-`DTK2`_ is shipped as a sub-module of `Trilinos`_, so installing `Trilinos`_ is
+`DTK2`_ is shipped as a sub-module of `Trilinos`_, so building `Trilinos`_ is
 needed. For people who are not familiar with `Trilinos`_, this can be tricky.
-Therefore, an excerpt from our `DTK2 Docker image building script <https://github.com/unifem/cht-coupler/blob/mapper-bin/Dockerfile#L42>`_
+Therefore, an excerpt of our `DTK2 Docker image building script <https://github.com/unifem/cht-coupler/blob/mapper-bin/Dockerfile#L42>`_
 might be helpful:
 
 .. code-block:: console
@@ -146,6 +146,7 @@ the place where you install `MOAB`_.
     We recommend that install `DTK2`_ from our `unifem forked repo <https://github.com/unifem/DataTransferKit/tree/dtk-2.0>`_
     or my `personal forked repo <https://github.com/chiao45/DataTransferKit>`_
     since we may add/modify the source codes to make `DTK2`_ more advanced.
+
 .. _install_this:
 
 Install ParPyDTK2
