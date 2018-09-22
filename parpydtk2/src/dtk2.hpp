@@ -156,10 +156,10 @@ class Mapper {
        << indentation_
        << "spatial dimension: " << sub_list.get<int>("Spatial Dimension")
        << '\n'
-       << indentation_
-       << "basis type: " << sub_list.get<string>("Basis Type") << '\n'
-       << indentation_
-       << "basis order: " << sub_list.get<int>("Basis Order") << '\n'
+       << indentation_ << "basis type: " << sub_list.get<string>("Basis Type")
+       << '\n'
+       << indentation_ << "basis order: " << sub_list.get<int>("Basis Order")
+       << '\n'
        << indentation_
        << "type of search: " << sub_list.get<string>("Type of Search") << '\n'
        << indentation_ << (rs ? "radius: " : "knn: ")
@@ -302,7 +302,9 @@ class Mapper {
           << indentation_ << "mapper created time: " << date << '\n'
           << indentation_ << "binary built time: " << __DATE__ << ' '
           << __TIME__ << '\n'
-          << indentation_ << "total processes: " << B_->ranks() << "\n\n"
+          << indentation_ << "total processes: " << B_->ranks() << '\n'
+          << indentation_
+          << "backend: " << (is_unifem_backend() ? "unifem" : "dtk2") << "\n\n"
           << title_ << std::endl;
 
     // init par lists
@@ -776,9 +778,8 @@ class Mapper {
     if (verbose_) {
       using std::string;
 
-      streamer_master(rank())
-          << title_ << "\n\n"
-          << indentation_ << "transfer block has started\n";
+      streamer_master(rank()) << title_ << "\n\n"
+                              << indentation_ << "transfer block has started\n";
     }
 
     timer_ = 0.0;
@@ -798,9 +799,8 @@ class Mapper {
     if (verbose_)
       streamer_master(rank())
           << '\n'
-          << indentation_ << "transferring blue: " << bf
-          << " and green: " << gf << " with "
-          << (direct ? "FORWARD" : "BACKWARD") << " direction\n";
+          << indentation_ << "transferring blue: " << bf << " and green: " << gf
+          << " with " << (direct ? "FORWARD" : "BACKWARD") << " direction\n";
 
     auto &b_dtk_fields = B_->dtk_fields();
     auto &g_dtk_fields = G_->dtk_fields();
