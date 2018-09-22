@@ -62,6 +62,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
             const std_string &version,
             const std_string &date,
             bool profiling,
+            const std_string &stat_file,
             bool verbose
         ) except +
         int ranks()

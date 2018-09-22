@@ -26,6 +26,8 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdio>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <set>
@@ -53,6 +55,8 @@
 
 // tune this
 #define DEFAULT_SIGMA 2.0
+
+#define STAT_FREQ 20
 
 #endif
 
@@ -93,6 +97,14 @@ enum BasisFunctions {
 /// \class Mapper
 /// \brief the mapper interface for interface solution transfer
 class Mapper {
+  /// \struct StatInfo
+  /// \brief a simple structure to store discontinuous points and timing results
+  struct StatInfo {
+    StatInfo(int d, float tt) : disc(d), t(tt) {}
+    int disc;
+    float t;
+  };
+
   /// \brief initialize parameter list
   inline void init_parlist_() {
     FOR_DIR(i) {
@@ -140,17 +152,17 @@ class Mapper {
     const bool use_qrcp = sub_list.get<bool>("Use QRCP Impl");
     if (map_type == "Moving Least Square Reconstruction" && use_qrcp)
       map_type = "Adaptive Weighted Least Square Fitting";
-    ss << string(LEN2, ' ') << "map type: " << map_type << '\n'
-       << string(LEN2, ' ')
+    ss << indentation_ << "map type: " << map_type << '\n'
+       << indentation_
        << "spatial dimension: " << sub_list.get<int>("Spatial Dimension")
        << '\n'
-       << string(LEN2, ' ')
+       << indentation_
        << "basis type: " << sub_list.get<string>("Basis Type") << '\n'
-       << string(LEN2, ' ')
+       << indentation_
        << "basis order: " << sub_list.get<int>("Basis Order") << '\n'
-       << string(LEN2, ' ')
+       << indentation_
        << "type of search: " << sub_list.get<string>("Type of Search") << '\n'
-       << string(LEN2, ' ') << (rs ? "radius: " : "knn: ")
+       << indentation_ << (rs ? "radius: " : "knn: ")
        << (rs ? sub_list.get<double>("RBF Radius")
               : sub_list.get<int>("Num Neighbors"))
        << '\n';
@@ -186,6 +198,46 @@ class Mapper {
     return list.get<_V>(value);
   }
 
+  /// \brief helper function for writing outputs
+  inline void _dump_stats() {
+    *stat_ << "\nFORWARD Direction:\n\n";
+    char t[30];
+    for (auto itr = info_[1].begin(); itr != info_[1].end(); ++itr) {
+      const std::string &bf = itr->first.first;
+      const std::string &gf = itr->first.second;
+      const unsigned long c = counts_[1].find(itr->first)->second;
+      *stat_ << ' ' << bf << ',' << gf << ":\n\n";
+      auto &v = itr->second;
+      unsigned long start = c - v.size();
+      for (const auto &info : v) {
+        std::sprintf(t, "%.4e", info.t);
+        ++start;
+        *stat_ << "  " << start << ", time: " << t << ", disc: " << info.disc
+               << '\n';
+      }
+      v.clear();
+      *stat_ << '\n';
+    }
+    *stat_ << "#FORWARD Direction\n\nBACKWARD Direction:\n\n";
+    for (auto itr = info_[0].begin(); itr != info_[0].end(); ++itr) {
+      const std::string &bf = itr->first.first;
+      const std::string &gf = itr->first.second;
+      const unsigned long c = counts_[0].find(itr->first)->second;
+      *stat_ << ' ' << bf << ',' << gf << ":\n\n";
+      auto &v = itr->second;
+      unsigned long start = c - v.size();
+      for (const auto &info : v) {
+        std::sprintf(t, "%.4e", info.t);
+        ++start;
+        *stat_ << "  " << start << ", time: " << t << ", disc: " << info.disc
+               << '\n';
+      }
+      v.clear();
+      *stat_ << '\n';
+    }
+    *stat_ << "#BACKWARD Direction\n";
+  }
+
  public:
   /// \brief check the backend
   /// \return if the underlying DTK2 is using our unifem forked version, then
@@ -212,7 +264,8 @@ class Mapper {
   /// \param[in] profiling whether do simple profiling, i.e. wtime
   explicit Mapper(std::shared_ptr<IMeshDB> B, std::shared_ptr<IMeshDB> G,
                   const std::string &version = "", const std::string &date = "",
-                  bool profiling = true, bool verbose = true)
+                  bool profiling = true, const std::string &stat_file = "",
+                  bool verbose = true)
       : B_(B),
         G_(G),
         dim_(3),
@@ -229,23 +282,39 @@ class Mapper {
     throw_error_if(flag != MPI_IDENT,
                    "the green and blue comms must be identical");
     using std::string;
+    if (profiling) {
+      string filename = stat_file == "" ? "mapper_" + version : stat_file;
+      if (ranks() > 1) filename += "_" + std::to_string(rank());
+      filename += ".stat";
+      stat_.reset(new std::ofstream(filename.c_str()));
+      throw_error_if(!stat_ || !stat_->is_open(),
+                     "cannot create file " + filename);
+      *stat_ << "parpydtk2 version: " << version << '\n'
+             << "total processes: " << B_->ranks() << '\n'
+             << "rank: " << B_->rank() << "\n\n";
+    }
     // NOTE pass in time should have "%b %d %Y %H:%M:%S" format
     if (verbose_)
       streamer_master(B_->rank())
           << '\n'
-          << string(LEN1, '-') << "\n\n"
-          << string(LEN2, ' ') << "parpydtk2 version: " << version << '\n'
-          << string(LEN2, ' ') << "mapper created time: " << date << '\n'
-          << string(LEN2, ' ') << "binary built time: " << __DATE__ << ' '
+          << title_ << "\n\n"
+          << indentation_ << "parpydtk2 version: " << version << '\n'
+          << indentation_ << "mapper created time: " << date << '\n'
+          << indentation_ << "binary built time: " << __DATE__ << ' '
           << __TIME__ << '\n'
-          << string(LEN2, ' ') << "total processes: " << B_->ranks() << "\n\n"
-          << string(LEN1, '-') << std::endl;
+          << indentation_ << "total processes: " << B_->ranks() << "\n\n"
+          << title_ << std::endl;
 
     // init par lists
     init_parlist_();
   }
 
-  virtual ~Mapper() = default;
+  virtual ~Mapper() {
+    if (profiling_) {
+      _dump_stats();
+      stat_->close();
+    }
+  }
 
   /// \name mapper_py_interface
   ///@{
@@ -332,8 +401,13 @@ class Mapper {
     } else {
       FOR_DIR(i) {
         auto &list = opts_[i]->sublist("Point Cloud", true);
-        list.set("Basis Type", "Wendland");
-        list.set("Basis Order", 21);
+        if (is_unifem_backend()) {
+          list.set("Basis Type", "Wendland");
+          list.set("Basis Order", 21);
+        } else {
+          list.set("Basis Type", "Wu");
+          list.set("Basis Order", 2);
+        }
       }
     }
   }
@@ -447,7 +521,7 @@ class Mapper {
   /// \brief set the leaf size
   /// \param[in] size the leaf size in kd-tree
   /// \warning This method only works with unifem or chiao45 forked backend
-  inline void set_leaf_b(int size) noexcept {
+  inline void set_leaf_b(int size) {
     throw_error_if(size <= 0, "invalid leaf size number");
     opts_[1]->sublist("Point Cloud", true).set("Leaf Size", size);
   }
@@ -455,7 +529,7 @@ class Mapper {
   /// \brief set the leaf size for green database
   /// \param[in] size the leaf size in kd-tree
   /// \warning This method only works with unifem or chiao45 forked backend
-  inline void set_leaf_g(int size) noexcept {
+  inline void set_leaf_g(int size) {
     throw_error_if(size <= 0, "invalid leaf size number");
     opts_[0]->sublist("Point Cloud", true).set("Leaf Size", size);
   }
@@ -542,12 +616,12 @@ class Mapper {
       FOR_DIR(i)
       info[i] = parse_list_(*opts_[i]);
       streamer_master(B_->rank()) << '\n'
-                                  << string(LEN1, '-') << "\n\n"
-                                  << string(LEN2, ' ') << "blue ===> green:\n"
+                                  << title_ << "\n\n"
+                                  << indentation_ << "blue ===> green:\n"
                                   << info[1] << '\n'
-                                  << string(LEN2, ' ') << "green ===> blue:\n"
+                                  << indentation_ << "green ===> blue:\n"
                                   << info[0] << '\n'
-                                  << string(LEN1, '-') << std::endl;
+                                  << title_ << std::endl;
     }
     ready_ = true;  // trigger flag here
     timer_ = 0.0;
@@ -561,30 +635,40 @@ class Mapper {
                                        const std::string &gf, bool direct) {
     throw_error_if(B_->field_dim(bf) != G_->field_dim(gf),
                    "field dimensions don\'t match");
-    auto &b_dtk_fields = B_->dtk_fields();
-    auto &g_dtk_fields = G_->dtk_fields();
-    auto &src = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
-    auto &tgt = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
+    // auto &b_dtk_fields = B_->dtk_fields();
+    // auto &g_dtk_fields = G_->dtk_fields();
+    // auto &src = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
+    // auto &tgt = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
     auto &optr = operators_[direct];
-    auto build = optr.insert(
-        std::make_pair(std::make_pair(bf, gf),
-                       factory_.create(src.second->getMap(),
-                                       tgt.second->getMap(), *opts_[direct])));
+    // auto build = optr.insert(
+    //     std::make_pair(std::make_pair(bf, gf),
+    //                    factory_.create(src.second->getMap(),
+    //                                    tgt.second->getMap(),
+    //                                    *opts_[direct])));
+    auto build = optr.insert(std::make_pair(std::make_pair(bf, gf), nullptr));
     if (!build.second) {
       show_warning(bf + "+" + gf + " already exists, ignoring request");
       return;
     }
 
-    auto &op = build.first->second;
-    auto &src_mngrs = direct ? B_->mangers() : G_->mangers();
-    auto &tgt_mngrs = direct ? G_->mangers() : B_->mangers();
-    auto &src_mngr = src_mngrs[src.first];
-    auto &tgt_mngr = tgt_mngrs[tgt.first];
+    // create stat information boxes
+    if (profiling_) {
+      auto info_itr = info_[direct].insert(
+          std::make_pair(std::make_pair(bf, gf), std::vector<StatInfo>()));
+      info_itr.first->second.reserve(40);
+      counts_[direct].insert(std::make_pair(std::make_pair(bf, gf), 0ul));
+    }
 
-    // actually build the operator
-    double t = MPI_Wtime();
-    op->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
-    timer_ += MPI_Wtime() - t;
+    // auto &op = build.first->second;
+    // auto &src_mngrs = direct ? B_->mangers() : G_->mangers();
+    // auto &tgt_mngrs = direct ? G_->mangers() : B_->mangers();
+    // auto &src_mngr = src_mngrs[src.first];
+    // auto &tgt_mngr = tgt_mngrs[tgt.first];
+
+    // // actually build the operator
+    // double t = MPI_Wtime();
+    // op->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
+    // timer_ += MPI_Wtime() - t;
   }
 
   /// \brief check if a coupling data fields exists
@@ -602,62 +686,103 @@ class Mapper {
     throw_error_if(!ready_,
                    "the ready tag was not triggerred, did you forget "
                    "call begin_initialization?");
-    double avg, min_, max_;
-    if (profiling_ && ranks() > 1) {
-      // gather all time information
-      std::vector<double> ts(ranks());
-      ts[0] = timer_;
-      int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
-                           comm());
-      if (ret != MPI_SUCCESS) {
-        // NOTE that the default handler in mpi will directly abort, as a
-        // mapper we will not modify the mpi handler (this should be the task
-        // of application codes)
-        char msg[MPI_MAX_ERROR_STRING];
-        int dummy, err_cls;
-        MPI_Error_string(ret, msg, &dummy);
-        MPI_Error_class(ret, &err_cls);
-        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
-                  << ", error_class: " << err_cls << ", msg: " << msg
-                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, ret);
-      }
 
-      // compute timing data
-      auto minmax = std::minmax_element(ts.cbegin(), ts.cend());
-      min_ = *minmax.first;
-      max_ = *minmax.second;
-      avg = std::accumulate(ts.cbegin(), ts.cend(), 0.0) / ranks();
-    } else if (profiling_)
-      avg = min_ = max_ = timer_;
+    // get the blue and green dtk fields
+    auto &b_dtk_fields = B_->dtk_fields();
+    auto &g_dtk_fields = G_->dtk_fields();
+
+    // first build forward direction, i.e. b->g, true
+    if (!operators_[1].empty() && optrs_[1].is_null()) {
+      auto first_itr = operators_[1].begin();
+      auto &src = b_dtk_fields[first_itr->first.first];
+      auto &tgt = g_dtk_fields[first_itr->first.second];
+      // create the mapper
+      optrs_[1] = factory_.create(src.second->getMap(), tgt.second->getMap(),
+                                  *opts_[1]);
+
+      auto &src_mngrs = B_->mangers();
+      auto &tgt_mngrs = G_->mangers();
+      auto &src_mngr = src_mngrs[src.first];
+      auto &tgt_mngr = tgt_mngrs[tgt.first];
+
+      // actually build the operator
+      timer_ = 0.0;
+      double t = MPI_Wtime();
+      optrs_[1]->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
+      timer_ += MPI_Wtime() - t;
+
+      // now assign each coupled field with the RCP operator
+      for (auto itr = first_itr; itr != operators_[1].end(); ++itr)
+        itr->second = optrs_[1];
+    } else
+      timer_ = 0.0;
+
+    const double b2g_time = timer_;
+
+    // second, same process for building the g2b, i.e. backward operator
+    if (!operators_[0].empty() && optrs_[0].is_null()) {
+      auto first_itr = operators_[0].begin();
+      auto &tgt = b_dtk_fields[first_itr->first.first];
+      auto &src = g_dtk_fields[first_itr->first.second];
+      // create the mapper
+      optrs_[0] = factory_.create(src.second->getMap(), tgt.second->getMap(),
+                                  *opts_[0]);
+
+      auto &tgt_mngrs = B_->mangers();
+      auto &src_mngrs = G_->mangers();
+      auto &tgt_mngr = tgt_mngrs[src.first];
+      auto &src_mngr = src_mngrs[tgt.first];
+
+      // actually build the operator
+      timer_ = 0.0;
+      double t = MPI_Wtime();
+      optrs_[0]->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
+      timer_ += MPI_Wtime() - t;
+
+      // now assign each coupled field with the RCP operator
+      for (auto itr = first_itr; itr != operators_[0].end(); ++itr)
+        itr->second = optrs_[0];
+    } else
+      timer_ = 0.0;
+
+    const double g2b_time = timer_;
+
+    if (profiling_)
+      *stat_ << "\nB2G (FORWARD) Operator building time: " << b2g_time << '\n'
+             << "G2B (BACKWARD) Operator building time: " << g2b_time << "\n\n";
 
     // streaming messages
     if (verbose_) {
       using std::string;
 
       streamer_master(rank())
-          << string(LEN1, '-') << "\n\n"
-          << string(LEN2, ' ') << "total registered coupling fields: "
+          << title_ << "\n\n"
+          << indentation_ << "total registered coupling fields: "
           << operators_[0].size() + operators_[1].size() << '\n'
-          << string(LEN2, ' ') << "blue ===> green:\n";
+          << indentation_ << "blue ===> green:\n";
       for (const auto &op : operators_[0])
         streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.first
                                 << ':' << op.first.second << '\n';
-      streamer_master(rank()) << string(LEN2, ' ') << "green ===> blue:\n";
+      streamer_master(rank()) << indentation_ << "green ===> blue:\n";
       for (const auto &op : operators_[1])
         streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.second
                                 << ':' << op.first.first << '\n';
-      if (profiling_)
-        streamer_master(rank())
-            << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-            << min_ << ", max " << max_ << ", avg " << avg << '\n';
-      streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+      streamer_master(rank()) << '\n' << title_ << std::endl;
     }
   }
 
   /// \brief begin to transfer data
-  inline void begin_transfer() noexcept { timer_ = 0.0; }
+  inline void begin_transfer() noexcept {
+    if (verbose_) {
+      using std::string;
+
+      streamer_master(rank())
+          << title_ << "\n\n"
+          << indentation_ << "transfer block has started\n";
+    }
+
+    timer_ = 0.0;
+  }
 
   /// \brief transfer data
   /// \param[in] bf blue meshdb field data
@@ -669,6 +794,14 @@ class Mapper {
     auto op_iter = operators_[direct].find(key);
     throw_error_if(op_iter == operators_[direct].end(),
                    "no such operator exist");
+
+    if (verbose_)
+      streamer_master(rank())
+          << '\n'
+          << indentation_ << "transferring blue: " << bf
+          << " and green: " << gf << " with "
+          << (direct ? "FORWARD" : "BACKWARD") << " direction\n";
+
     auto &b_dtk_fields = B_->dtk_fields();
     auto &g_dtk_fields = G_->dtk_fields();
     auto &src = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
@@ -676,50 +809,40 @@ class Mapper {
     double t = MPI_Wtime();
     op_iter->second->apply(*src.second, *tgt.second);
     timer_ += MPI_Wtime() - t;
+
+    // treatments of profiling
+    if (profiling_) {
+      ++counts_[direct][key];
+      int disc = -1;
+      if (opts_[direct]
+              ->sublist("Point Cloud", true)
+              .isParameter("_DISC_COUNTS_"))
+        disc = opts_[direct]
+                   ->sublist("Point Cloud", true)
+                   .get<int>("_DISC_COUNTS_");
+      info_[direct][key].emplace_back(disc, timer_);
+    }
   }
 
   /// \brief end transfer
   inline void end_transfer() {
-    double avg, min_, max_;
-    if (profiling_ && ranks() > 1) {
-      // gather all time information
-      std::vector<double> ts(ranks());
-      ts[0] = timer_;
-      int ret = MPI_Gather(&timer_, 1, MPI_DOUBLE, ts.data(), 1, MPI_DOUBLE, 0,
-                           comm());
-      if (ret != MPI_SUCCESS) {
-        // NOTE that the default handler in mpi will directly abort, as a
-        // mapper we will not modify the mpi handler (this should be the task
-        // of application codes)
-        char msg[MPI_MAX_ERROR_STRING];
-        int dummy, err_cls;
-        MPI_Error_string(ret, msg, &dummy);
-        MPI_Error_class(ret, &err_cls);
-        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
-                  << ", error_class: " << err_cls << ", msg: " << msg
-                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << std::endl;
-        MPI_Abort(MPI_COMM_WORLD, ret);
-      }
+    static int counter = 0;  // not thread safe
 
-      // compute timing data
-      auto minmax = std::minmax_element(ts.cbegin(), ts.cend());
-      min_ = *minmax.first;
-      max_ = *minmax.second;
-      avg = std::accumulate(ts.cbegin(), ts.cend(), 0.0) / ranks();
-    } else if (profiling_)
-      avg = min_ = max_ = timer_;
+    if (profiling_) {
+      ++counter;
+      if (counter == STAT_FREQ) {
+        counter = 0;
+        _dump_stats();
+      }
+    }
 
     if (verbose_) {
       using std::string;
 
-      streamer_master(rank()) << string(LEN1, '-') << "\n\n"
-                              << string(LEN2, ' ') << "transfer finished\n";
-      if (profiling_)
-        streamer_master(rank())
-            << string(LEN2, ' ') << "time used: " << std::scientific << "min "
-            << min_ << ", max " << max_ << ", avg " << avg << '\n';
-      streamer_master(rank()) << '\n' << string(LEN1, '-') << std::endl;
+      streamer_master(rank())
+          << '\n'
+          << indentation_ << "transfer block has finished\n\n"
+          << title_ << std::endl;
     }
   }
 
@@ -754,12 +877,32 @@ class Mapper {
            Teuchos::RCP<DataTransferKit::MapOperator>>
       operators_[2];
 
+  /// \brief operators
+  Teuchos::RCP<DataTransferKit::MapOperator> optrs_[2];
+
+  /// \brief information box for each of the registered pair of fields
+  std::map<std::pair<std::string, std::string>, std::vector<StatInfo>> info_[2];
+
+  /// \brief total transfer counter
+  std::map<std::pair<std::string, std::string>, unsigned long> counts_[2];
+
+  /// \brief the statistics file handle
+  std::unique_ptr<std::ofstream> stat_;
+
   /// \brief map factory
   static ::DataTransferKit::MapOperatorFactory factory_;
+
+  /// \brief title of verbose printing
+  const static std::string title_;
+
+  /// \brief indentation
+  const static std::string indentation_;
 };
 
-// define the factory
+// define the factory, title, and indentation
 ::DataTransferKit::MapOperatorFactory Mapper::factory_;
+const std::string Mapper::title_ = std::string(LEN1, '-');
+const std::string Mapper::indentation_ = std::string(LEN2, ' ');
 
 /** @}*/
 

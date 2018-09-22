@@ -140,14 +140,15 @@ cdef class Mapper(object):
         pass
 
     def __cinit__(self, IMeshDB blue, IMeshDB green, *,
-        profiling=True, verbose=True, **kwargs):
+        profiling=True, str stat_file='', verbose=True, **kwargs):
         cdef:
             std_string version = __version__.encode('UTF-8')
             std_string date = \
                 datetime.datetime.now().strftime('%b %d %Y %H:%M:%S').encode('UTF-8')
             bool prof = <bool> 1 if profiling else <bool> 0
             bool verb = <bool> 1 if verbose else <bool> 0
-        self.mp = new dtk.Mapper(blue.mdb, green.mdb, version, date, prof, verb)
+            std_string sf = stat_file.encode('UTF-8')
+        self.mp = new dtk.Mapper(blue.mdb, green.mdb, version, date, prof, sf, verb)
         self.blue = blue
         self.green = green
 
