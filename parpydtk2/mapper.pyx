@@ -619,6 +619,54 @@ cdef class Mapper(object):
         except:
             pass
 
+    def awls_conf(self, **kwargs):
+        """Configuration of Adaptive Weighted Least Square Fitting
+
+        Parameters
+        ----------
+        All parameters in :func:`enable_unifem_mmls_auto_conf` plus
+
+        basis : int (optional)
+            basis weighting scheme, default is WENDLAND21
+        rho : float (optional)
+            number of rows in the local Vandermonde system, i.e. rho*col
+        resolve_disc : bool (optional)
+            default is ``False``, i.e. don't resolve disctinuities
+        sigma : float (optional)
+            threshold used in the smoothness indicator, default is 2
+        _ind_file : str (optional)
+            indicator result file, used in unifem/chiao45 dtk
+
+        Notes
+        -----
+
+        ``_ind_file`` is for internal use to fine tune the parameter ``sigma``.
+        It will not be enabled in release build.
+
+        See Also
+        --------
+        :func:`enable_unifem_mmls_auto_conf` : configure radius for parallel
+        mesh rendezvous
+        """
+        # filter the kwargs and enable mmls configuration
+        self.enable_unifem_mmls_auto_conf(
+            ref_r_b=kwargs.pop('ref_r_b', None),
+            ref_r_g=kwargs.pop('ref_r_g', None),
+            dim=kwargs.pop('dim', None),
+            verbose=kwargs.pop('verbose', False),
+            **kwargs
+        )
+        self.basis = kwargs.pop('basis', 7)
+        self.method = 3
+        self.disc_sigma = kwargs.pop('sigma', 2)
+        flag = kwargs.pop('resolve_disc', False)
+        if flag:
+            self.enable_resolving_disc()
+        else:
+            self.disable_resolving_disc()
+        f = kwargs.pop('_ind_file', None)
+        if f:
+            self._set_ind_file(f)
 
     def begin_initialization(self, **kwargs):
         """Initialization starter
