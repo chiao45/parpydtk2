@@ -127,7 +127,9 @@ cdef class Mapper(object):
         profiling : bool (optional)
             whether or not do timing report, default is ``True``.
         verbose : bool (optional)
-            whether or not verbose printing, higher priority than ``profiling``
+            whether or not verbose printing, default is ``True``.
+        stat_file : str (optional)
+            file for storing profiling information
 
         Examples
         --------
@@ -136,6 +138,16 @@ cdef class Mapper(object):
         >>> # initialize blue and green
         >>> mapper = Mapper(blue=blue,green=green)
         >>> # do work with mapper
+
+        ParPyDTK2 Profiling File
+        ------------------------
+
+        By default, if ``profiling`` is required, a mapper will create an
+        ASCII file named ``mapper_[version].stat``, where ``mapper_[version]``
+        can be specified by the user with parameter ``stat_file``. If the
+        program runs in parallel, then a suffix of ``_[rank]`` will be added
+        to the filename, i.e. ``mapper_[version]_[rank].stat`` or
+        ``[stat_file]_[rank].stat``.
         """
         pass
 
