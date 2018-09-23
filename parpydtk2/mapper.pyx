@@ -442,7 +442,7 @@ cdef class Mapper(object):
         ref_r_g : float (optional)
             reference user-specified green radius, i.e. :math:`r_u` for green
         dim : int (optional)
-            explicit dimension, default is the surface topological dimension
+            topological dimension, default is the surface dimension
         verbose : bool (optional)
             print verbose information/warning messages, default is ``False``
         alpha : float
@@ -544,12 +544,22 @@ cdef class Mapper(object):
 
         Parameters
         ----------
-        All parameters in :func:`enable_unifem_mmls_auto_conf` plus
-
         basis : int (optional)
             basis weighting scheme, default is WENDLAND21
         rho : float (optional)
             number of rows in the local Vandermonde system, i.e. rho*col
+        ref_r_b : float (optional)
+            reference user-specified blue radius, i.e. :math:`r_u` for blue
+        ref_r_g : float (optional)
+            reference user-specified green radius, i.e. :math:`r_u` for green
+        dim : int (optional)
+            topological dimension, default is the surface dimension
+        verbose : bool (optional)
+            print verbose information/warning messages, default is ``False``
+        alpha : float
+            the :math:`\alpha` parameter
+        beta : float
+            the :math:`\beta` parameter
         _ind_file : str (optional)
             indicator result file, used in unifem/chiao45 dtk
 
