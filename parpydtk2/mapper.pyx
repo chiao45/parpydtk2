@@ -623,11 +623,12 @@ cdef class Mapper(object):
         self.basis = kwargs.pop('basis', 7)
         self.method = 3
         self.disc_sigma = kwargs.pop('sigma', 2)
-        flag = kwargs.pop('resolve_disc', False)
-        if flag:
-            self.enable_resolving_disc()
-        else:
-            self.disable_resolving_disc()
+        flag = kwargs.pop('resolve_disc', None)
+        if flag is not None:
+            if flag:
+                self.enable_resolving_disc()
+            else:
+                self.disable_resolving_disc()
         f = kwargs.pop('_ind_file', None)
         if f:
             self._set_ind_file(f)
