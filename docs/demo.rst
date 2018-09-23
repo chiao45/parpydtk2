@@ -18,8 +18,8 @@ cores, while the ``green`` side is treated as a serial mesh.
 
     comm = MPI.COMM_WORLD
 
-    blue = IMeshDB(comm)
-    green = IMeshDB(comm)
+    blue, green = create_imeshdb_pair(comm)
+
     assert comm.size == 2
     rank = comm.rank
 
