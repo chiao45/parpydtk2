@@ -441,6 +441,10 @@ following results are with :math:`\rho=6.8` (68 points in stencils):
 However, this is less practical and hard to apply on general surfaces. As a
 matter of fact, we didn't observe this with the torus setting.
 
+.. only:: html
+
+    You can obtain the test grids :download:`hear<../examples/test_grids.tar.xz>`.
+
 Non-smooth Functions
 ++++++++++++++++++++
 
@@ -483,7 +487,7 @@ The default settings are:
 2.
 
     :py:attr:`~parpydtk2.Mapper.basis` is set to
-    :py:attr:`~parpydtk2.WENDLADN21`,
+    :py:attr:`~parpydtk2.WENDLAND21`,
 
 3. :math:`\alpha` is set to 0.1 in :eq:`rend`,
 

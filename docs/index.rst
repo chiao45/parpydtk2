@@ -19,7 +19,7 @@ Welcome to ParPyDTK2's documentation!
 
 .. only:: html
 
-    The PDF of this documentation can be obtained ::download:`here ParPyDTK2.pdf<./ParPyDTK2.pdf>`.
+    The PDF of this documentation can be obtained :download:`here<./ParPyDTK2.pdf>`.
 
 Indices and tables
 ==================
