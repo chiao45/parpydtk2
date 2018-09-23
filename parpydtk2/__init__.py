@@ -84,3 +84,36 @@ def get_include():
     """Get the abs include path"""
     import os
     return os.path.dirname(os.path.abspath(__file__))
+
+
+def create_imeshdb_pair(comm=None):
+    """Create a pair of interface mesh databases
+
+    This is a convenient and safe way to create a pair of imeshdbs, i.e.
+    ``blue`` and ``green`` participants with a unified communicator. Please
+    use this API instead of directly creating :py:class:`~parpydtk2.IMeshDB`.
+
+    Parameters
+    ----------
+    comm : MPI.Comm (optional)
+        MPI communicator, default is ``None`` or ``MPI_COMM_WORLD``.
+
+    Returns
+    -------
+    tuple of :py:class:`~parpydtk2.IMeshDB`
+        ``blue`` and ``green`` participants
+
+    Examples
+    --------
+
+    Create mesh databases with ``MPI_COMM_WORLD``
+    >>> from parpydtk2 import *
+    >>> blue, green = create_imeshdb_pair()
+
+    Create mesh databases with explicit communicator
+    >>> from mpi4py import *
+    >>> from parpydtk2 import *
+    >>> comm = MPI.COMM_WORLD
+    >>> blue, green = create_imeshdb_pair(comm)
+    """
+    return IMeshDB(comm), IMeshDB(comm)
