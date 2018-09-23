@@ -89,9 +89,6 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         double radius_b()
         double radius_g()
         int dimension()
-        void set_resolve_disc_flag(bool flag)
-        void set_disc_sigma(double sigma)
-        double disc_sigma()
         void _set_ind_file(const std_string &fn)
         void _wipe_ind_file()
         void set_rho(double rho)
@@ -114,6 +111,8 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void transfer_data(
             const std_string &bf,
             const std_string &gf,
-            bool direct
+            bool direct,
+            bool resolve_disc,
+            double sigma
         ) except +
         void end_transfer()

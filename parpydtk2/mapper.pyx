@@ -45,7 +45,6 @@ _ATTR_PARS = {
     'radius_g',
     'leaf_b',
     'leaf_g',
-    'disc_sigma',
     'rho'
 }
 
@@ -86,8 +85,6 @@ cdef class Mapper(object):
         kd-tree leaf size of blue_mesh
     leaf_g : int
         kd-tree leaf size of green_mesh
-    disc_sigma : double
-        indicator threshold for resolving discontinuities
     rho : double
         local Vandermonde system row scaling factor
     """
@@ -377,47 +374,6 @@ cdef class Mapper(object):
                 RuntimeWarning
             )
     
-    def enable_resolving_disc(self):
-        """Enable resolving discontinuities service
-
-        .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
-        """
-        import warnings
-        if not Mapper.is_unifem_backend():
-            warnings.warn(
-                'The underlying DTK2 installation is not from UNIFEM!',
-                RuntimeWarning
-            )
-        self.mp.set_resolve_disc_flag(<bool> 1)
-
-    def disable_resolving_disc(self):
-        """Disable resolving discontinuities service
-
-        .. note:: This only works with UNIFEM/CHIAO45 modification of DTK2
-        """
-        import warnings
-        if not Mapper.is_unifem_backend():
-            warnings.warn(
-                'The underlying DTK2 installation is not from UNIFEM!',
-                RuntimeWarning
-            )
-        self.mp.set_resolve_disc_flag(<bool> 0)
-
-    @property
-    def disc_sigma(self):
-        """float: The smoothness indicator value threshold"""
-        return self.mp.disc_sigma()
-    
-    @disc_sigma.setter
-    def disc_sigma(self, double sigma):
-        import warnings
-        if not Mapper.is_unifem_backend():
-            warnings.warn(
-                'The underlying DTK2 installation is not from UNIFEM!',
-                RuntimeWarning
-            )
-        self.mp.set_disc_sigma(sigma)
-    
     def _set_ind_file(self, str filename):
         # WARNING! should be used in serial for tuning parameter!
         cdef std_string fn = filename.encode('UTF-8')
@@ -594,10 +550,6 @@ cdef class Mapper(object):
             basis weighting scheme, default is WENDLAND21
         rho : float (optional)
             number of rows in the local Vandermonde system, i.e. rho*col
-        resolve_disc : bool (optional)
-            default is ``False``, i.e. don't resolve disctinuities
-        sigma : float (optional)
-            threshold used in the smoothness indicator, default is 2
         _ind_file : str (optional)
             indicator result file, used in unifem/chiao45 dtk
 
@@ -622,13 +574,6 @@ cdef class Mapper(object):
         )
         self.basis = kwargs.pop('basis', 7)
         self.method = 3
-        self.disc_sigma = kwargs.pop('sigma', 2)
-        flag = kwargs.pop('resolve_disc', None)
-        if flag is not None:
-            if flag:
-                self.enable_resolving_disc()
-            else:
-                self.disable_resolving_disc()
         f = kwargs.pop('_ind_file', None)
         if f:
             self._set_ind_file(f)
@@ -711,6 +656,11 @@ cdef class Mapper(object):
     def transfer_data(self, str bf, str gf, bool direct, **kwargs):
         """Transfer (bf, gf) in the ``direct`` direction
 
+        .. note::
+
+            Parameters ``resolve_disc`` and ``sigma`` only work with
+            UNIFEM/CHIAO45 DTK and AWLS method.
+
         Parameters
         ----------
         bf : str
@@ -719,6 +669,10 @@ cdef class Mapper(object):
             green mesh field name
         direct : bool
             ``True`` for blue->green, ``False`` for the opposite
+        resolve_disc : bool (optional)
+            ``True`` if do post-processing for resolving non-smooth functions
+        sigma : float (optional)
+            threshold used in smoothness indicator
 
         See Also
         --------
@@ -728,14 +682,11 @@ cdef class Mapper(object):
             std_string bf_ = <std_string> bf.encode('UTF-8')
             std_string gf_ = <std_string> gf.encode('UTF-8')
             bool dr = <bool> 1 if direct else <bool> 0
-        # resolve empty partitions
-        if dr:
-            src = self.blue
-            tag_src = bf
-        else:
-            src = self.green
-            tag_src = gf
-        self.mp.transfer_data(bf_, gf_, dr)
+            bool disc = <bool> 0
+            double sgm = <double> kwargs.get('sigma', -1.0)
+        if kwargs.get('resolve_disc', False):
+            disc = <bool> 1
+        self.mp.transfer_data(bf_, gf_, dr, disc, sgm)
 
     def end_transfer(self, **kwargs):
         """Transfer closer
@@ -757,11 +708,6 @@ cdef class Mapper(object):
     def __setitem__(self, str key, v):
         if key in _ATTR_PARS:
             setattr(self, key, v)
-        elif key == 'resolve_disc':
-            if v:
-                self.enable_resolving_disc()
-            else:
-                self.disable_resolving_disc()
         elif key == '_ind_file':
             if v:
                 self._set_ind_file(v)

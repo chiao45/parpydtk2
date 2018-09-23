@@ -53,9 +53,6 @@
 #define LEN2 15
 #endif
 
-// tune this
-#define DEFAULT_SIGMA 2.0
-
 #define STAT_FREQ 20
 
 #endif
@@ -122,8 +119,6 @@ class Mapper {
       sub_list.set("Matching Nodes", false);
       sub_list.set("Leaf Size", 30);
       sub_list.set("Use QRCP Impl", true);
-      sub_list.set("Resolve Discontinuity", false);  // by default, turn off
-      sub_list.set("Indicator Threshold", DEFAULT_SIGMA);
       sub_list.set("Indicator Output File", std::string(""));
       sub_list.set("Local Rho Scaling", -1.0);
 
@@ -546,31 +541,6 @@ class Mapper {
     return opts_[0]->sublist("Point Cloud", true).get<int>("Leaf Size");
   }
 
-  /// \brief set resolving discontinuities flag
-  /// \param[in] flag true for enable the service
-  /// \note This only works with QRCP implementation, or AWLS method
-  inline void set_resolve_disc_flag(bool flag) noexcept {
-    FOR_DIR(i)
-    opts_[i]->sublist("Point Cloud", true).set("Resolve Discontinuity", flag);
-  }
-
-  /// \brief set the sigma for smoothness indicator threshold
-  /// \param[in] sigma threshold
-  /// \note This only works with QRCP implementation, or AWLS method
-  inline void set_disc_sigma(double sigma) noexcept {
-    FOR_DIR(i)
-    opts_[i]->sublist("Point Cloud", true).set("Indicator Threshold", sigma);
-  }
-
-  /// \brief get the sigma
-  /// \sa set_disc_sigma
-  /// \note This only works with QRCP implementation, or AWLS method
-  inline double disc_sigma() const noexcept {
-    return opts_[0]
-        ->sublist("Point Cloud", true)
-        .get<double>("Indicator Threshold");
-  }
-
   /// \brief set the indicator tuning filename
   /// \param[in] fn filename
   /// \note internal use
@@ -789,8 +759,15 @@ class Mapper {
   /// \param[in] bf blue meshdb field data
   /// \param[in] gf green meshdb field data
   /// \param[in] direct \a true for b->g, \a false for g->b
+  /// \param[in] resolve_disc (optional) if \a true, then try to resolve disc
+  /// \param[in] sigma (optional) indicator threshold
+  ///
+  /// Notice that internally, the unifem backend occupies the mode parameter
+  /// to indicate whether or not do post processing to resolve non-smooth
+  /// solutions. Set mode == Teuchos::TRANS
   inline void transfer_data(const std::string &bf, const std::string &gf,
-                            bool direct) {
+                            bool direct, bool resolve_disc = false,
+                            double sigma = -1.0) {
     const auto key = std::make_pair(bf, gf);
     auto op_iter = operators_[direct].find(key);
     throw_error_if(op_iter == operators_[direct].end(),
@@ -807,7 +784,10 @@ class Mapper {
     auto &src = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
     auto &tgt = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
     double t = MPI_Wtime();
-    op_iter->second->apply(*src.second, *tgt.second);
+    if (is_unifem_backend() && check_method() == AWLS && resolve_disc)
+      op_iter->second->apply(*src.second, *tgt.second, Teuchos::TRANS, sigma);
+    else
+      op_iter->second->apply(*src.second, *tgt.second);
     timer_ += MPI_Wtime() - t;
 
     // treatments of profiling
