@@ -107,10 +107,12 @@ def create_imeshdb_pair(comm=None):
     --------
 
     Create mesh databases with ``MPI_COMM_WORLD``
+
     >>> from parpydtk2 import *
     >>> blue, green = create_imeshdb_pair()
 
     Create mesh databases with explicit communicator
+
     >>> from mpi4py import *
     >>> from parpydtk2 import *
     >>> comm = MPI.COMM_WORLD

@@ -200,7 +200,7 @@ Finally, the solution transfer part is pretty straightforward:
 
 .. only:: html
 
-    This code can be obtained ::download:`here parallel2serial.py<../examples/parallel2serial.py>`.
+    This code can be obtained :download:`here parallel2serial.py<../examples/parallel2serial.py>`.
 
 .. only:: latex
 
