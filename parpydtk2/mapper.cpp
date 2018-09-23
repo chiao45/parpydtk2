@@ -7775,13 +7775,13 @@ static PyObject *__pyx_pf_9parpydtk2_6mapper_6Mapper_16enable_unifem_mmls_auto_c
  *             pass
  * 
  *     def awls_conf(self, **kwargs):             # <<<<<<<<<<<<<<
- *         """Configuration of Adaptive Weighted Least Square Fitting
+ *         r"""Configuration of Adaptive Weighted Least Square Fitting
  * 
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_9parpydtk2_6mapper_6Mapper_19awls_conf(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9parpydtk2_6mapper_6Mapper_18awls_conf[] = "Mapper.awls_conf(self, **kwargs)\nConfiguration of Adaptive Weighted Least Square Fitting\n\n        Parameters\n        ----------\n        basis : int (optional)\n            basis weighting scheme, default is WENDLAND21\n        rho : float (optional)\n            number of rows in the local Vandermonde system, i.e. rho*col\n        ref_r_b : float (optional)\n            reference user-specified blue radius, i.e. :math:`r_u` for blue\n        ref_r_g : float (optional)\n            reference user-specified green radius, i.e. :math:`r_u` for green\n        dim : int (optional)\n            topological dimension, default is the surface dimension\n        verbose : bool (optional)\n            print verbose information/warning messages, default is ``False``\n        alpha : float\n            the :math:`\007lpha` parameter\n        beta : float\n            the :math:`\010eta` parameter\n        _ind_file : str (optional)\n            indicator result file, used in unifem/chiao45 dtk\n\n        Notes\n        -----\n\n        ``_ind_file`` is for internal use to fine tune the parameter ``sigma``.\n        It will not be enabled in release build.\n\n        See Also\n        --------\n        :func:`enable_unifem_mmls_auto_conf` : configure radius for parallel\n        mesh rendezvous\n        ";
+static char __pyx_doc_9parpydtk2_6mapper_6Mapper_18awls_conf[] = "Mapper.awls_conf(self, **kwargs)\nConfiguration of Adaptive Weighted Least Square Fitting\n\n        Parameters\n        ----------\n        basis : int (optional)\n            basis weighting scheme, default is WENDLAND21\n        rho : float (optional)\n            number of rows in the local Vandermonde system, i.e. rho*col\n        ref_r_b : float (optional)\n            reference user-specified blue radius, i.e. :math:`r_u` for blue\n        ref_r_g : float (optional)\n            reference user-specified green radius, i.e. :math:`r_u` for green\n        dim : int (optional)\n            topological dimension, default is the surface dimension\n        verbose : bool (optional)\n            print verbose information/warning messages, default is ``False``\n        alpha : float\n            the :math:`\\alpha` parameter\n        beta : float\n            the :math:`\\beta` parameter\n        _ind_file : str (optional)\n            indicator result file, used in unifem/chiao45 dtk\n\n        Notes\n        -----\n\n        ``_ind_file`` is for internal use to fine tune the parameter ``sigma``.\n        It will not be enabled in release build.\n\n        See Also\n        --------\n        :func:`enable_unifem_mmls_auto_conf` : configure radius for parallel\n        mesh rendezvous\n        ";
 static PyObject *__pyx_pw_9parpydtk2_6mapper_6Mapper_19awls_conf(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_kwargs = 0;
   PyObject *__pyx_r = 0;
@@ -8005,7 +8005,7 @@ static PyObject *__pyx_pf_9parpydtk2_6mapper_6Mapper_18awls_conf(struct __pyx_ob
  *             pass
  * 
  *     def awls_conf(self, **kwargs):             # <<<<<<<<<<<<<<
- *         """Configuration of Adaptive Weighted Least Square Fitting
+ *         r"""Configuration of Adaptive Weighted Least Square Fitting
  * 
  */
 

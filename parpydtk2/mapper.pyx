@@ -540,7 +540,7 @@ cdef class Mapper(object):
             pass
 
     def awls_conf(self, **kwargs):
-        """Configuration of Adaptive Weighted Least Square Fitting
+        r"""Configuration of Adaptive Weighted Least Square Fitting
 
         Parameters
         ----------
