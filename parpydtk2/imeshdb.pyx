@@ -94,6 +94,16 @@ cdef class IMeshDB(object):
         >>> from mpi4py import MPI
         >>> import parpydtk2 as dtk
         >>> mdb = dtk.IMeshDB(MPI.COMM_WOLRD)
+
+        Notes
+        -----
+
+        Since the mesh database participants appear at least in pairs, a
+        prefered way to construct IMeshDB is to use the wrapper API
+        :py:func:`~parpydtk2.create_imeshdb_pair`, e.g.
+
+        >>> from parpydtk2 import *
+        >>> blue, green = create_imeshdb_pair()
         """
         pass
 

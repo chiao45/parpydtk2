@@ -15,8 +15,7 @@ comm = MPI.COMM_WORLD
 # NOTE implementation should be within a try ... except
 try:
     # create our blue and green mesh databases
-    blue = IMeshDB(comm)
-    green = IMeshDB(comm)
+    blue, green = create_imeshdb_pair(comm)
     assert comm.size == 2
     rank = comm.rank
 
@@ -137,9 +136,11 @@ try:
 
     comm.barrier()
 
-    print(rank, 'blue L2-error=%.3e' % (np.linalg.norm(err_b)/np.sqrt(err_b.size)))
+    print(rank, 'blue L2-error=%.3e' %
+          (np.linalg.norm(err_b)/np.sqrt(err_b.size)))
     if rank == 0:
-        print(0, 'green L2-error=%.3e' % (np.linalg.norm(err_g)/np.sqrt(err_g.size)))
+        print(0, 'green L2-error=%.3e' %
+              (np.linalg.norm(err_g)/np.sqrt(err_g.size)))
 except Exception:
     # if something goes wrong, set the error code and raise again
     error.ERROR_CODE = 1

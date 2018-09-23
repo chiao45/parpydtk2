@@ -257,17 +257,19 @@ class Mapper {
   /// \param[in] version passed from Python inteface
   /// \param[in] date passed from Python interface
   /// \param[in] profiling whether do simple profiling, i.e. wtime
-  explicit Mapper(std::shared_ptr<IMeshDB> B, std::shared_ptr<IMeshDB> G,
-                  const std::string &version = "", const std::string &date = "",
-                  bool profiling = true, const std::string &stat_file = "",
-                  bool verbose = true)
+  /// \param[in] stat_file statistics filename
+  /// \param[in] verbose doing verbose information printing
+  Mapper(std::shared_ptr<IMeshDB> B, std::shared_ptr<IMeshDB> G,
+         const std::string &version = "", const std::string &date = "",
+         bool profiling = true, const std::string &stat_file = "",
+         bool verbose = true)
       : B_(B),
         G_(G),
         dim_(3),
         ready_(false),
         profiling_(profiling),
-        timer_(0.0),
-        verbose_(verbose) {
+        verbose_(verbose),
+        stat_write_freq_counter_(0) {
     throw_error_if(!(B->created() && G->created()),
                    "the input databases must be constructured first!");
     // make sure the communicators are similar, both communicators should not
@@ -596,7 +598,6 @@ class Mapper {
                                   << title_ << std::endl;
     }
     ready_ = true;  // trigger flag here
-    timer_ = 0.0;
   }
 
   /// \brief register coupling fields
@@ -663,6 +664,8 @@ class Mapper {
     auto &b_dtk_fields = B_->dtk_fields();
     auto &g_dtk_fields = G_->dtk_fields();
 
+    double b2g_time = 0.0;
+
     // first build forward direction, i.e. b->g, true
     if (!operators_[1].empty() && optrs_[1].is_null()) {
       auto first_itr = operators_[1].begin();
@@ -678,18 +681,17 @@ class Mapper {
       auto &tgt_mngr = tgt_mngrs[tgt.first];
 
       // actually build the operator
-      timer_ = 0.0;
-      double t = MPI_Wtime();
+      const double t = MPI_Wtime();
       optrs_[1]->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
-      timer_ += MPI_Wtime() - t;
+      b2g_time = MPI_Wtime() - t;
 
       // now assign each coupled field with the RCP operator
+      // NOTE this implementation is due to some historical reasons...
       for (auto itr = first_itr; itr != operators_[1].end(); ++itr)
         itr->second = optrs_[1];
-    } else
-      timer_ = 0.0;
+    }
 
-    const double b2g_time = timer_;
+    double g2b_time(0.0);
 
     // second, same process for building the g2b, i.e. backward operator
     if (!operators_[0].empty() && optrs_[0].is_null()) {
@@ -706,18 +708,15 @@ class Mapper {
       auto &src_mngr = src_mngrs[tgt.first];
 
       // actually build the operator
-      timer_ = 0.0;
-      double t = MPI_Wtime();
+      const double t = MPI_Wtime();
       optrs_[0]->setup(src_mngr.functionSpace(), tgt_mngr.functionSpace());
-      timer_ += MPI_Wtime() - t;
+      g2b_time = MPI_Wtime() - t;
 
       // now assign each coupled field with the RCP operator
+      // NOTE this implementation is due to some historical reasons...
       for (auto itr = first_itr; itr != operators_[0].end(); ++itr)
         itr->second = optrs_[0];
-    } else
-      timer_ = 0.0;
-
-    const double g2b_time = timer_;
+    }
 
     if (profiling_)
       *stat_ << "\nB2G (FORWARD) Operator building time: " << b2g_time << '\n'
@@ -725,7 +724,7 @@ class Mapper {
 
     // streaming messages
     if (verbose_) {
-      using std::string;
+      const static std::string indentation2 = std::string(LEN2 + 5, ' ');
 
       streamer_master(rank())
           << title_ << "\n\n"
@@ -733,26 +732,21 @@ class Mapper {
           << operators_[0].size() + operators_[1].size() << '\n'
           << indentation_ << "blue ===> green:\n";
       for (const auto &op : operators_[0])
-        streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.first
-                                << ':' << op.first.second << '\n';
+        streamer_master(rank())
+            << indentation2 << op.first.first << ':' << op.first.second << '\n';
       streamer_master(rank()) << indentation_ << "green ===> blue:\n";
       for (const auto &op : operators_[1])
-        streamer_master(rank()) << string(LEN2 + 5, ' ') << op.first.second
-                                << ':' << op.first.first << '\n';
+        streamer_master(rank())
+            << indentation2 << op.first.second << ':' << op.first.first << '\n';
       streamer_master(rank()) << '\n' << title_ << std::endl;
     }
   }
 
   /// \brief begin to transfer data
   inline void begin_transfer() noexcept {
-    if (verbose_) {
-      using std::string;
-
+    if (verbose_)
       streamer_master(rank()) << title_ << "\n\n"
                               << indentation_ << "transfer block has started\n";
-    }
-
-    timer_ = 0.0;
   }
 
   /// \brief transfer data
@@ -788,7 +782,7 @@ class Mapper {
       op_iter->second->apply(*src.second, *tgt.second, Teuchos::TRANS, sigma);
     else
       op_iter->second->apply(*src.second, *tgt.second);
-    timer_ += MPI_Wtime() - t;
+    t = MPI_Wtime() - t;
 
     // treatments of profiling
     if (profiling_) {
@@ -800,33 +794,29 @@ class Mapper {
         disc = opts_[direct]
                    ->sublist("Point Cloud", true)
                    .get<int>("_DISC_COUNTS_");
-      info_[direct][key].emplace_back(disc, timer_);
+      info_[direct][key].emplace_back(disc, t);
     }
   }
 
   /// \brief end transfer
   inline void end_transfer() {
-    static int counter = 0;  // not thread safe
-
     if (profiling_) {
-      ++counter;
-      if (counter == STAT_FREQ) {
-        counter = 0;
+      ++stat_write_freq_counter_;
+      if (stat_write_freq_counter_ == STAT_FREQ) {
+        stat_write_freq_counter_ = 0;
         _dump_stats();
       }
     }
 
-    if (verbose_) {
-      using std::string;
-
+    if (verbose_)
       streamer_master(rank())
           << '\n'
           << indentation_ << "transfer block has finished\n\n"
           << title_ << std::endl;
-    }
   }
 
   ///@}
+
  protected:
   /// \brief blue mesh
   std::shared_ptr<IMeshDB> B_;
@@ -843,21 +833,18 @@ class Mapper {
   /// \brief whether do simple profiling
   bool profiling_;
 
-  /// \brief a simple timer buffer
-  double timer_;
-
   /// \brief verbose output
   bool verbose_;
 
   /// \brief parameter list
   std::unique_ptr<Teuchos::ParameterList> opts_[2];
 
-  /// \brief transfer operators
+  /// \brief transfer operators references
   std::map<std::pair<std::string, std::string>,
            Teuchos::RCP<DataTransferKit::MapOperator>>
       operators_[2];
 
-  /// \brief operators
+  /// \brief actual transfer operators
   Teuchos::RCP<DataTransferKit::MapOperator> optrs_[2];
 
   /// \brief information box for each of the registered pair of fields
@@ -868,6 +855,9 @@ class Mapper {
 
   /// \brief the statistics file handle
   std::unique_ptr<std::ofstream> stat_;
+
+  /// \brief statistics file dump freq counter
+  int stat_write_freq_counter_;
 
   /// \brief map factory
   static ::DataTransferKit::MapOperatorFactory factory_;
