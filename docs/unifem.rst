@@ -5,6 +5,44 @@
 ``UNIFEM`` Extension
 ====================
 
+Although the `modified moving least square` in `DTK2`_ is a very advanced
+data remapping method, there are still rooms for improvement.
+
+1.
+
+    Whenever dealing with Vandermonde systems, stability must be taken into
+    consideration.
+
+2.
+
+    The local support of the Vandermonde systems should be adaptive based on
+    the properties of local stencils.
+
+The MLS method solves the local problem in the normal equation setting, which
+doubles the condition number of the system. MMLS solves the local system with
+*truncated singular value decomposition* (TSVD), but the problem is that the
+truncated terms in the Vandermonde systems cannot be controlled. Notice that
+in order to perform the TSVD, an condition number estimator is needed, and MMLS
+uses the one in LAPACK for general matrices that requires an LU factorization,
+which takes another :math:`O(n^3)` FLOPs.
+
+Regarding implementation details, MMLS uses the global cartesian coordinates
+for constructing Vandermonde matrices and calls SVD incrementally to ensure
+the resulting systems are full rank, and this procedure is less stable and
+costly.
+
+For the local stencil choice, directly using the query results is risky,
+because the stencil might be too large. In general, the number of points in
+the local stencils should be determined by the column sizes of the Vandermonde
+systems.
+
+Moreover, after the data has been remapped, an intermediate target solutions
+are obtained. Combining with the input source data, *a posteriori* error
+analysis can be performed in order to fix non-smooth values.
+
+With these considerations, we have implemented *adaptive weighted least square*
+(AWLS) as an extension of the **meshless** methods in `DTK2`_.
+
 .. _wls:
 
 Weighted Least Square (WLS) Formulation
@@ -201,6 +239,8 @@ for each of the local problems.
     dependence of finite elements with adaptive extended stencil FEM (AES-FEM).
     Int. J. Numer. Meth. Engrg., vol. 108, pp. 1054–1085, 2016.
 
+.. _unifem_local_stencil:
+
 Improving the Strategy of Choosing Local Stencil
 ------------------------------------------------
 
@@ -212,18 +252,18 @@ for problems with point clouds that are not uniformly distributed. To overcome
 this, we have implemented the following three steps for querying and choosing
 local supports.
 
-#.
+1.
 
     Perform ``knn`` search with a small number of neighborhoods to estimate the
     radii of the one-ring neighborhood of the local point clouds, say
     :math:`h`.
 
-#.
+2.
 
     Perform ``radius`` search with a relatively large radius so that we have
     enough candidates for next step. The radius is chosen as: :math:`r=ah`.
 
-#.
+3.
 
     Choose the support stencil, i.e. :math:`\boldsymbol{J}` from the candidates
     based on the number of columns (coefficients) in the Vandermonde systems,
@@ -255,6 +295,7 @@ bounding box the target point cloud with an approximated extension. For this
 extension length, we have implemented the following strategy:
 
 .. math::
+    :label: rend
 
     r&=\max(\alpha h_b, \frac{\beta h_b}{N^{1/d}}, r_u)
 
@@ -301,11 +342,189 @@ smoothness indicator, which is similar to those used in WENO schemes.
 
     \frac{\left\vert\hat{f}_i^t-f_1^s\right\vert}{\epsilon h}&\le\sigma
 
-where :math:`\epsilon=\max\limits_{j\in\boldsymbol{J}}(\left\vert f_j^s\right\vert)`.
+where
+:math:`\epsilon=\max\limits_{j\in\boldsymbol{J}}(\left\vert f_j^s\right\vert)`.
 This scheme is efficient and doesn't require geometry data. The drawback is
 also obvious---it's too simple and tuning :math:`\sigma` is not easy.
 
 Results
 -------
 
-.. todo:: finish me.
+Convergence Tests
++++++++++++++++++
+
+We have tested the AWLS on the following settings:
+
+1. plane surface,
+2. spherical surface, and
+3. torus surface.
+
+For the plane surface, we use structured grids on one side and triangular
+meshes on the other side. For setting 2, we use *cubed-sphere* grids and
+triangular meshes. For the last case, we use triangular meshes with different
+resolutions. All grids are uniformly refined by three levels in order to
+study the convergences. Notice that only the coarsest levels are shown in the
+following figures and all tests are transferred from fine grids to the
+corresponding coarse ones.
+
+    +----------------------------------------+-----------------------------------------+
+    | Finer Grids                            | Coarser Grids                           |
+    +========================================+=========================================+
+    | .. image:: images/flat_quad_grids.png  | .. image:: images/flat_tri_grids.png    |
+    +----------------------------------------+-----------------------------------------+
+    | .. image:: images/sphere_tri_grids.png | .. image:: images/sphere_quad_grids.png |
+    +----------------------------------------+-----------------------------------------+
+    | .. image:: images/torus_fine_grids.png | .. image:: images/torus_coarse_grids.png|
+    +----------------------------------------+-----------------------------------------+
+
+The convergence metric is:
+
+.. math::
+
+    c&=\left\vert\frac{\log_2(e_3/e_1)}{\log_2(h_3/h_1)}\right\vert
+
+Where :math:`h` is some consistent measures of the grids. The error metric we
+use is relative :math:`\ell_2` errors:
+
+.. math::
+
+    e&=\frac{\left\Vert f_h-f\right\Vert_2}{\left\Vert f\right\Vert_2}
+
+For the plane surface, the following two models are tested:
+
+1. :math:`f(x,y)=e^{x+y}`, and
+2. :math:`f(x,y)=\sin(\frac{\pi x}{2})\cos(\frac{\pi y}{2})`.
+
+We use :py:attr:`~parpydtk2.WENDLAND21` as weighting scheme and choose
+:math:`\rho=3` (18 points in stencils), the results are:
+
+.. figure:: images/plane_conv.png
+    :align: center
+    :scale: 70
+
+    Convergence of the plane surface
+
+For the 3D cases, we choose the following models:
+
+1. :math:`f(x,y,z)=(\sin(x)+\cos(y))z`, and
+2. :math:`f(x,y,z)=e^{x+y+z}`.
+
+We use :py:attr:`~parpydtk2.WENDLAND21` as weighting scheme and choose
+:math:`\rho=3.2` (32 points in stencils) for the spherical surface and
+:math:`\rho=2.3` (23 points in the stencils) for the torus surface, the results
+are:
+
+.. figure:: images/sph_conv1.png
+    :align: center
+    :scale: 70
+
+    Convergence of the spherical surface
+
+.. figure:: images/torus_conv.png
+    :align: center
+    :scale: 70
+
+    Convergence of the torus surface
+
+Note that for all cases, the super-convergence phenomenon is observed, i.e.
+the convergence rate is greater than :math:`(p+1)`-st order.
+
+Since the spherical surface is really special due to its smoothness and
+symmetry, an almost-:math:`(p+2)`-nd order super-convergence can be obtained
+with large stencils and :py:attr:`~parpydtk2.WU2` weighting schemes. The
+following results are with :math:`\rho=6.8` (68 points in stencils):
+
+.. figure:: images/sph_conv2.png
+    :align: center
+    :scale: 70
+
+However, this is less practical and hard to apply on general surfaces. As a
+matter of fact, we didn't observe this with the torus setting.
+
+Non-smooth Functions
+++++++++++++++++++++
+
+As a preliminary report, we perform the discontinuous test with the heaviside
+function on the plane surface with :math:`\sigma=2`. The results are:
+
+.. figure:: images/hv_os.png
+    :align: center
+    :scale: 70
+
+    Heaviside function w/o resolving non-smooth regions
+
+.. figure:: images/hv_noos.png
+    :align: center
+    :scale: 70
+
+    Heaviside function with resolving non-smooth regions
+
+Usage
+-----
+
+In order to use AWLS, you need to :ref:`install <install>` our modified DTK2
+packages from either `my personal forked version <https://github.com/chiao45/DataTransferKit>`_
+or our `unifem forked version`.
+
+To determine the backend DTK2, a static member function is implemented:
+
+>>> from parpydtk2 import *
+>>> assert Mapper.is_unifem_backend()
+
+To enable AWLS support, you just need to call
+:py:func:`~parpydtk2.Mapper.awls_conf`:
+
+>>> mapper.awls_conf()
+
+The default settings are:
+
+1. :py:attr:`~parpydtk2.Mapper.method` is set to :py:attr:`~parpydtk2.AWLS`,
+
+2.
+
+    :py:attr:`~parpydtk2.Mapper.basis` is set to
+    :py:attr:`~parpydtk2.WENDLADN21`,
+
+3. :math:`\alpha` is set to 0.1 in :eq:`rend`,
+
+4. :math:`\beta` is set to 5 in :eq:`rend`,
+
+5.
+
+    :math:`\rho` is set to 3 for
+    :ref:`choosing local stencils <unifem_local_stencil>`
+
+A complete list of parameters are:
+
+>>> mapper.awls_conf(
+...     ref_r_b=...,
+...     ref_r_g=...,
+...     dim=...,
+...     alpha=...,
+...     beta=...,
+...     basis=...,
+...     rho=...,
+...     verbose=True,
+... )
+
+Where ``ref_r_b`` and ``ref_r_g`` are :math:`r_u` in :eq:`rend` for blue and
+green participants. ``dim`` is the topological dimension used in :eq:`rend`,
+which is important if you need to transfer surface data (90% cases) in 3D space
+in order to estimate the proper of mesh cell sizes.
+
+In order to resolve discontinuous solutions, you need to pass in at least one
+additional parameter ``resolve_disc`` to
+:py:func:`~parpydtk2.Mapper.transfer_data`:
+
+>>> bf_tag, gf_tag = 'foo', 'bar'
+>>> mapper.transfer_data(bf_tag, gf_tag, direct=B2G, resolve_disc=True)
+
+The default is :math:`\sigma` in :eq:`ind` is 2. To use another value, simply
+do:
+
+>>> mapper.transfer_data(...,resolve_disc=True, sigma=...)
+
+.. note::
+
+    Resolving discontinuous solutions only works with
+    :py:attr:`~parpydtk2.AWLS` method under UNIFEM backend.
