@@ -429,6 +429,12 @@ are:
 Note that for all cases, the super-convergence phenomenon is observed, i.e.
 the convergence rate is greater than :math:`(p+1)`-st order.
 
+.. only:: html
+
+    The torus program script can be obtained :download:`here<../examples/awls.py>`,
+    and the corresponding grids are stored in compressed ``npz`` file that can
+    be downloaded :download:`here<../examples/torus.npz>`.
+
 Since the spherical surface is really special due to its smoothness and
 symmetry, an almost-:math:`(p+2)`-nd order super-convergence can be obtained
 with large stencils and :py:attr:`~parpydtk2.WU2` weighting schemes. The
@@ -443,7 +449,7 @@ matter of fact, we didn't observe this with the torus setting.
 
 .. only:: html
 
-    You can obtain the test grids :download:`hear<../examples/test_grids.tar.xz>`.
+    You can obtain the test grids in VTK :download:`hear<../examples/test_grids.tar.xz>`.
 
 Non-smooth Functions
 ++++++++++++++++++++
