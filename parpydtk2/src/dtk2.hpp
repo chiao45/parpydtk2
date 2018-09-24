@@ -127,7 +127,7 @@ class Mapper {
     }
     // if not unifem backend, then reset the basis to be compatible with
     // the original DTK2
-    if (!is_unifem_backend()) {
+    if (is_dtk2_backend()) {
       FOR_DIR(i) {
         auto &sub_list = opts_[i]->sublist("Point Cloud", true);
         sub_list.set("Basis Type", "Wu");
@@ -235,19 +235,19 @@ class Mapper {
 
  public:
   /// \brief check the backend
-  /// \return if the underlying DTK2 is using our unifem forked version, then
+  /// \return if the underlying DTK2 is using in chiao45 forkedversion, then
   /// return \a true
   ///
-  /// In unifem version of DTK2, we modified the exception class to add a
-  /// prefix of "unifem", so it's feasible to query this information w/o adding
+  /// In chiao45 version of DTK2, we modified the exception class to add a
+  /// prefix of "chiao45", so it's feasible to query this information w/o adding
   /// a new API
-  inline static bool is_unifem_backend() noexcept {
-    const static std::string prefix("unifem");
+  inline static bool is_dtk2_backend() noexcept {
+    const static std::string prefix("chiao45");
     using namespace DataTransferKit;
     try {
       throw DataTransferKitException("dummy", "dummy", 1);
     } catch (const DataTransferKitException &e) {
-      return prefix.compare(0u, prefix.size(), e.what(), 0, prefix.size()) == 0;
+      return prefix.compare(0u, prefix.size(), e.what(), 0, prefix.size()) != 0;
     }
   }
 
@@ -301,7 +301,7 @@ class Mapper {
           << __TIME__ << '\n'
           << indentation_ << "total processes: " << B_->ranks() << '\n'
           << indentation_
-          << "backend: " << (is_unifem_backend() ? "unifem" : "dtk2") << "\n\n"
+          << "backend: " << (!is_dtk2_backend() ? "chiao45" : "dtk2") << "\n\n"
           << title_ << std::endl;
 
     // init par lists
@@ -400,7 +400,7 @@ class Mapper {
     } else {
       FOR_DIR(i) {
         auto &list = opts_[i]->sublist("Point Cloud", true);
-        if (is_unifem_backend()) {
+        if (!is_dtk2_backend()) {
           list.set("Basis Type", "Wendland");
           list.set("Basis Order", 21);
         } else {
@@ -778,7 +778,7 @@ class Mapper {
     auto &src = direct ? b_dtk_fields[bf] : g_dtk_fields[gf];
     auto &tgt = direct ? g_dtk_fields[gf] : b_dtk_fields[bf];
     double t = MPI_Wtime();
-    if (is_unifem_backend() && check_method() == AWLS && resolve_disc)
+    if (!is_dtk2_backend() && check_method() == AWLS && resolve_disc)
       op_iter->second->apply(*src.second, *tgt.second, Teuchos::TRANS, sigma);
     else
       op_iter->second->apply(*src.second, *tgt.second);

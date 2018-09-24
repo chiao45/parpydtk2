@@ -98,15 +98,15 @@ cdef class Mapper(object):
         return keys
 
     @staticmethod
-    def is_unifem_backend():
-        """Check if the underlying DTK2 library is unifem forked version
+    def is_dtk2_backend():
+        """Check if the underlying DTK2 library is chiao45 forked version
 
         Returns
         -------
         bool
-            ``True`` if the user's DTK2 is from unifem forked repo
+            ``False`` if the user's DTK2 is from chiao45 forked repo
         """
-        return dtk.Mapper.is_unifem_backend()
+        return dtk.Mapper.is_dtk2_backend()
 
     def __init__(self, blue, green, profiling=True, verbose=True, **kwargs):
         """Constructor
@@ -236,10 +236,10 @@ cdef class Mapper(object):
         elif m == 2:
             self.mp.use_n2n(<bool> 0)
         elif m == 3:
-            if not Mapper.is_unifem_backend():
+            if Mapper.is_dtk2_backend():
                 import warnings
                 warnings.warn(
-                    'The underlying DTK2 is not from UNIFEM or CHIAO45, AWLS will reduce to MMLS',
+                    'The underlying DTK2 is not from CHIAO45, AWLS will reduce to MMLS',
                     RuntimeWarning
                 )
             self.mp.use_awls()
@@ -329,10 +329,10 @@ cdef class Mapper(object):
     
     @leaf_b.setter
     def leaf_b(self, int size):
-        if not Mapper.is_unifem_backend():
+        if Mapper.is_dtk2_backend():
             import warnings
             warnings.warn(
-                'Leaf size is only tunable while the underlying DTK2 is from UNIFEM or CHIAO45 forked versions',
+                'Leaf size is only tunable while the underlying DTK2 is from CHIAO45 forked version',
                 RuntimeWarning
             )
         self.mp.set_leaf_b(size)
@@ -350,7 +350,7 @@ cdef class Mapper(object):
         .. warning::
 
             This attribute only works when the underlying DTK2 is installed
-            from UNIFEM or CHIAO45 forked versions.
+            from CHIAO45 forked versions.
 
         See Also
         --------
@@ -360,10 +360,10 @@ cdef class Mapper(object):
     
     @leaf_g.setter
     def leaf_g(self, int size):
-        if not Mapper.is_unifem_backend():
+        if Mapper.is_dtk2_backend():
             import warnings
             warnings.warn(
-                'Leaf size is only tunable while the underlying DTK2 is from UNIFEM or CHIAO45 forked versions',
+                'Leaf size is only tunable while the underlying DTK2 is from CHIAO45 forked version',
                 RuntimeWarning
             )
         self.mp.set_leaf_g(size)
@@ -378,9 +378,9 @@ cdef class Mapper(object):
         # WARNING! should be used in serial for tuning parameter!
         cdef std_string fn = filename.encode('UTF-8')
         import warnings
-        if not Mapper.is_unifem_backend():
+        if Mapper.is_dtk2_backend():
             warnings.warn(
-                'The underlying DTK2 installation is not from UNIFEM!',
+                'The underlying DTK2 installation is not from CHIAO45!',
                 RuntimeWarning
             )
         self.mp._set_ind_file(fn)
@@ -397,15 +397,15 @@ cdef class Mapper(object):
     def rho(self, double v):
         self.mp.set_rho(v)
 
-    def enable_unifem_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
+    def enable_mmls_auto_conf(self, *, ref_r_b=None, ref_r_g=None,
         dim=None, verbose=False, **kwargs):
         r"""Automatically set up radius parameter for MMLS
 
         .. warning::
 
             This method should be used only when the underlying DTK2
-            installation is from UNIFEM or CHIAO45 forked versions. Otherwise,
-            you should **always** manully configure the radius parameters.
+            installation is from CHIAO45 forked version. Otherwise, you should
+            **always** manully configure the radius parameters.
 
         The following strategy is performed:
 
@@ -452,13 +452,13 @@ cdef class Mapper(object):
 
         See Also
         --------
-        :func:`is_unifem_backend` : check backend installation of DTK2
+        :func:`is_dtk2_backend` : check backend installation of DTK2
         """
         import warnings
         import sys
-        if not Mapper.is_unifem_backend():
+        if Mapper.is_dtk2_backend():
             warnings.warn(
-                'The underlying DTK2 installation is not from UNIFEM!',
+                'The underlying DTK2 installation is not from CHIAO45!',
                 RuntimeWarning
             )
         alpha = kwargs.pop('alpha', 0.1)
@@ -561,7 +561,7 @@ cdef class Mapper(object):
         beta : float
             the :math:`\beta` parameter
         _ind_file : str (optional)
-            indicator result file, used in unifem/chiao45 dtk
+            indicator result file, used in chiao45 dtk
 
         Notes
         -----
@@ -571,17 +571,18 @@ cdef class Mapper(object):
 
         See Also
         --------
-        :func:`enable_unifem_mmls_auto_conf` : configure radius for parallel
+        :func:`enable_mmls_auto_conf` : configure radius for parallel
         mesh rendezvous
         """
         # filter the kwargs and enable mmls configuration
-        self.enable_unifem_mmls_auto_conf(
+        self.enable_mmls_auto_conf(
             ref_r_b=kwargs.pop('ref_r_b', None),
             ref_r_g=kwargs.pop('ref_r_g', None),
             dim=kwargs.pop('dim', None),
             verbose=kwargs.pop('verbose', False),
             **kwargs
         )
+        self.rho = kwargs.pop('rho', 3.0)
         self.basis = kwargs.pop('basis', 7)
         self.method = 3
         f = kwargs.pop('_ind_file', None)

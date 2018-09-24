@@ -55,7 +55,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
     cdef cppclass Mapper:
         @staticmethod
-        bool is_unifem_backend()
+        bool is_dtk2_backend()
         Mapper(
             shared_ptr[IMeshDB] B,
             shared_ptr[IMeshDB] G,
