@@ -9,7 +9,7 @@ branches:
 
 env:
   global:
-    - BASE=unifem/cht-coupler:mapper-dev
+    - BASE=unifem/cht-coupler:meshdb-bin
 
 before_script:
   - docker --version
