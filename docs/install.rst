@@ -143,8 +143,7 @@ the place where you install `MOAB`_.
 
 .. note::
 
-    We recommend that install `DTK2`_ from our `unifem forked repo <https://github.com/unifem/DataTransferKit/tree/dtk-2.0>`_
-    or my `personal forked repo <https://github.com/chiao45/DataTransferKit>`_
+    We recommend that install `DTK2`_ from `my personal forked repo <https://github.com/chiao45/DataTransferKit>`_
     since we may add/modify the source codes to make `DTK2`_ more advanced.
 
 .. _install_this:

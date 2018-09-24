@@ -2,8 +2,8 @@
 
 .. _unifem:
 
-``UNIFEM`` Extension
-====================
+``AWLS`` Extension
+===================
 
 Although the `modified moving least square` in `DTK2`_ is a very advanced
 data remapping method, there are still rooms for improvement.
@@ -466,14 +466,18 @@ function on the plane surface with :math:`\sigma=2`. The results are:
 Usage
 -----
 
-In order to use AWLS, you need to :ref:`install <install>` our modified DTK2
-packages from either `my personal forked version <https://github.com/chiao45/DataTransferKit>`_
-or our `unifem forked version`.
+In order to use AWLS, you need to :ref:`install <install>` the DTK2 package
+from `my personal forked version <https://github.com/chiao45/DataTransferKit>`_.
+
+.. note::
+
+    I didn't decide to make a PR due to DTK2 is probably deprecated in the
+    official repository???
 
 To determine the backend DTK2, a static member function is implemented:
 
 >>> from parpydtk2 import *
->>> assert Mapper.is_unifem_backend()
+>>> assert not Mapper.is_dtk2_backend()
 
 To enable AWLS support, you just need to call
 :py:func:`~parpydtk2.Mapper.awls_conf`:
@@ -531,4 +535,4 @@ do:
 .. note::
 
     Resolving discontinuous solutions only works with
-    :py:attr:`~parpydtk2.AWLS` method under UNIFEM backend.
+    :py:attr:`~parpydtk2.AWLS` method under CHIAO45 backend.
