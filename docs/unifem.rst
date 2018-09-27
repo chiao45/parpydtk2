@@ -58,7 +58,7 @@ target output :math:`\boldsymbol{f}^t`, we want to construct a
 .. math::
     :label: op
 
-    \boldsymbol{f}^t&=\boldsymbol{T}\cdot\boldsymbol{f}^s
+    \boldsymbol{f}^t&=\boldsymbol{T}\boldsymbol{f}^s
 
 Clearly, such an operator is rectangle with sizes :math:`n` by :math:`m`, where
 :math:`n` is the number of nodes in target grid while :math:`m` for that of
@@ -70,7 +70,7 @@ reads:
 .. math::
     :label: it
 
-    f_i^t&=T_{i,\boldsymbol{J}}\cdot\boldsymbol{f}_{\boldsymbol{J}}^s
+    f_i^t&=T_{i,\boldsymbol{J}}\boldsymbol{f}_{\boldsymbol{J}}^s
 
 where :math:`\boldsymbol{J}` is the local support stencil around target node
 :math:`i`. Denote :math:`\boldsymbol{c}^T=T_{i,\boldsymbol{J}}`, and localize
@@ -96,7 +96,7 @@ fitting problem:
 .. math::
     :label: fit
 
-    \boldsymbol{V}^T\cdot\boldsymbol{c}&=\boldsymbol{e}_1
+    \boldsymbol{V}^T\boldsymbol{c}&=\boldsymbol{e}_1
 
 If :math:`\boldsymbol{V}` is square system, i.e. typical Vandermonde system,
 then :eq:`fit` is just an interpolation problem. When we have more points than
@@ -112,7 +112,7 @@ values of any points in :math:`\boldsymbol{u}`.
     :label: fit2
 
     \begin{eqnarray*}
-    \boldsymbol{V}\cdot\boldsymbol{C}&=\boldsymbol{I} \\
+    \boldsymbol{V}\boldsymbol{C}&=\boldsymbol{I} \\
     \boldsymbol{C}&=\boldsymbol{V}^+
     \end{eqnarray*}
 
@@ -126,7 +126,7 @@ coordinate system :math:`\boldsymbol{u}`, its Vandermonde component is:
     \boldsymbol{p}_V&=[1\ p_1\ p_2\ p_1^2\ p_1p_2\ p_2^2]^T
 
 Then evaluating :eq:`vc` in the system of polynomial coefficients, i.e.
-:eq:`fit2`, is just to perform :math:`\boldsymbol{p}_V^T\cdot\boldsymbol{C}`.
+:eq:`fit2`, is just to perform :math:`\boldsymbol{p}_V^T\boldsymbol{C}`.
 It's worth noting that for the fitting problem, where the query point is always
 the center (the target node of interest) thus having the the Vandermonde
 component :math:`[1\ 0\ 0\ 0\ 0\ 0]^T`. Therefore, the explicit computation
@@ -134,7 +134,7 @@ reduces to :eq:`fit`.
 
 It is well-known that the Vandermonde systems are ill-conditioned, so a
 balancing technique is needed. A typical way is to do a column scaling:
-:math:`\boldsymbol{V}\cdot\boldsymbol{S}`. Typical choices of the diagonal
+:math:`\boldsymbol{V}\boldsymbol{S}`. Typical choices of the diagonal
 matrix :math:`\boldsymbol{S}` are 1) *algebraic scaling* that is based on the
 norms of column vectors of :math:`\boldsymbol{V}` and 2) *geometric scaling*
 that is based on the radii of the local stencil :math:`\boldsymbol{J}`. Here
@@ -170,7 +170,7 @@ Now, the least square problem :eq:`fit2` can be formulated as:
 .. math::
     :label: min
 
-    \min(\left\Vert\boldsymbol{V}\cdot\boldsymbol{C}-\boldsymbol{I}\right\Vert_{\boldsymbol{W}})
+    \min(\left\Vert\boldsymbol{V}\boldsymbol{C}-\boldsymbol{I}\right\Vert_{\boldsymbol{W}})
 
 We choose to use the family of *radius basis functions* (RBF) as the diagonal
 row weighting matrix :math:`\boldsymbol{W}`.
@@ -183,7 +183,7 @@ Vandermonde system:
 .. math::
     :label: vv
 
-    \hat{\boldsymbol{V}}&=\boldsymbol{W}\cdot\boldsymbol{V}\cdot\boldsymbol{S}
+    \hat{\boldsymbol{V}}&=\boldsymbol{W}\boldsymbol{V}\boldsymbol{S}
 
 Plug :eq:`vv` into :eq:`fit` and reorganize it, we have:
 
@@ -192,11 +192,11 @@ Plug :eq:`vv` into :eq:`fit` and reorganize it, we have:
     :label: fit-final
 
     \begin{eqnarray*}
-    \hat{\boldsymbol{V}}^T\cdot\boldsymbol{W}^{-1}\cdot\boldsymbol{c}&=\boldsymbol{S}^{-1}\cdot\boldsymbol{e}_1 \\
-    \hat{\boldsymbol{V}}^T\cdot\hat{\boldsymbol{c}}&=\boldsymbol{e}_1
+    \hat{\boldsymbol{V}}^T\boldsymbol{W}^{-1}\boldsymbol{c}&=\boldsymbol{S}^{-1}\boldsymbol{e}_1 \\
+    \hat{\boldsymbol{V}}^T\hat{\boldsymbol{c}}&=\boldsymbol{e}_1
     \end{eqnarray*}
 
-Where :math:`\hat{\boldsymbol{c}}=\boldsymbol{W}^{-1}\cdot\boldsymbol{c}`.
+Where :math:`\hat{\boldsymbol{c}}=\boldsymbol{W}^{-1}\boldsymbol{c}`.
 
 Solving WLS
 +++++++++++
@@ -209,7 +209,7 @@ The first step is to decompose :math:`\hat{\boldsymbol{V}}` with QRCP:
 .. math::
     :label: qrcp
 
-    \hat{\boldsymbol{V}}\cdot\boldsymbol{P}&=\boldsymbol{Q}\cdot\boldsymbol{R}
+    \hat{\boldsymbol{V}}\boldsymbol{P}&=\boldsymbol{Q}\boldsymbol{R}
 
 The truncation step is to utilize a condition number estimator for the upper
 triangular system :math:`\boldsymbol{R}` that will report the rank of the
@@ -221,11 +221,11 @@ we have:
     :label: solve
 
     \begin{eqnarray*}
-    \boldsymbol{P}_{:,1:k}\cdot\boldsymbol{R}_{1:k,1:k}^T\cdot\boldsymbol{Q}_{:,1:k}^T\cdot\hat{\boldsymbol{c}}&=\boldsymbol{e}_1 \\
-    \boldsymbol{R}_{1:k,1:k}^T\cdot\boldsymbol{Q}_{:,1:k}^T\cdot\hat{\boldsymbol{c}}&=\boldsymbol{P}_{:,1:k}^T\cdot\boldsymbol{e}_1 \\
-    \boldsymbol{Q}_{:,1:k}^T\cdot\hat{\boldsymbol{c}}&=\boldsymbol{R}_{1:k,1:k}^{-T}\cdot\boldsymbol{P}_{:,1:k}^T\cdot\boldsymbol{e}_1 \\
-    \hat{\boldsymbol{c}}&=\boldsymbol{Q}_{:,1:k}\cdot\boldsymbol{R}_{1:k,1:k}^{-T}\cdot\boldsymbol{P}_{:,1:k}^T\cdot\boldsymbol{e}_1 \\
-    \boldsymbol{c}&=\boldsymbol{W}\cdot\boldsymbol{Q}_{:,1:k}\cdot\boldsymbol{R}_{1:k,1:k}^{-T}\cdot\boldsymbol{P}_{:,1:k}^T\cdot\boldsymbol{e}_1
+    \boldsymbol{P}_{:,1:k}\boldsymbol{R}_{1:k,1:k}^T\boldsymbol{Q}_{:,1:k}^T\hat{\boldsymbol{c}}&=\boldsymbol{e}_1 \\
+    \boldsymbol{R}_{1:k,1:k}^T\boldsymbol{Q}_{:,1:k}^T\hat{\boldsymbol{c}}&=\boldsymbol{P}_{:,1:k}^T\boldsymbol{e}_1 \\
+    \boldsymbol{Q}_{:,1:k}^T\hat{\boldsymbol{c}}&=\boldsymbol{R}_{1:k,1:k}^{-T}\boldsymbol{P}_{:,1:k}^T\boldsymbol{e}_1 \\
+    \hat{\boldsymbol{c}}&=\boldsymbol{Q}_{:,1:k}\boldsymbol{R}_{1:k,1:k}^{-T}\boldsymbol{P}_{:,1:k}^T\boldsymbol{e}_1 \\
+    \boldsymbol{c}&=\boldsymbol{W}\boldsymbol{Q}_{:,1:k}\boldsymbol{R}_{1:k,1:k}^{-T}\boldsymbol{P}_{:,1:k}^T\boldsymbol{e}_1
     \end{eqnarray*}
 
 This procedure is very efficient and robust. The dominated computation cost
