@@ -25,13 +25,12 @@ ERROR_CODE = 0
 
 def _atexit():
     if ERROR_CODE != 0:
-        import traceback
-        import sys
         from mpi4py import MPI
-
-        traceback.print_exc()
-        sys.stderr.flush()
         if MPI.Is_initialized() and MPI.COMM_WORLD.size > 1:
+            import traceback
+            import sys
+            traceback.print_exc()
+            sys.stderr.flush()
             MPI.COMM_WORLD.Abort(ERROR_CODE)
 
 

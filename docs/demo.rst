@@ -18,8 +18,8 @@ cores, while the ``green`` side is treated as a serial mesh.
 
     comm = MPI.COMM_WORLD
 
-    blue = IMeshDB(comm)
-    green = IMeshDB(comm)
+    blue, green = create_imeshdb_pair(comm)
+
     assert comm.size == 2
     rank = comm.rank
 
@@ -80,21 +80,25 @@ the two mesh databases.
     lbgids = bgids[8 * rank:8 * (rank + 1)].copy()
     blue.create_vertices(lcob)
     blue.assign_gids(lbgids)
-    blue.create_field('b')
-
     # do not use trivial global ID strategy
     blue.finish_create(False)
+    blue.create_field('b')
 
 As we can see, we equally distributed the mesh into the two cores as well as
-the corresponding global IDs. In line 56, the ``False`` flag indicates that
+the corresponding global IDs. In line 54, the ``False`` flag indicates that
 the mesh database should use the user-provided global IDs.
 
 .. warning::
 
-    Creating vertices and fields, and assigning global IDs must be called
-    within :py:func:`~parpydtk2.IMeshDB.begin_create` and
+    Creating vertices and assigning global IDs must be called between
+    :py:func:`~parpydtk2.IMeshDB.begin_create` and
     :py:func:`~parpydtk2.IMeshDB.finish_create`! Otherwise, exceptions are
     thrown.
+
+.. warning::
+
+    Creating fields must be done after
+    :py:func:`~parpydtk2.IMeshDB.finish_create`!
 
 Here is the treatment for the "serial" participant:
 
@@ -106,9 +110,9 @@ Here is the treatment for the "serial" participant:
     # only create on master rank
     if not rank:
         green.create_vertices(cog)
-    green.create_field('g')
     # since green is serial, we just use the trivial global IDs
     green.finish_create()  # empty partition is resolve here
+    green.create_field('g')  # must after finish create
 
     assert green.has_empty()
 
@@ -196,7 +200,7 @@ Finally, the solution transfer part is pretty straightforward:
 
 .. only:: html
 
-    This code can be obtained ::download:`here parallel2serial.py<../examples/parallel2serial.py>`.
+    This code can be obtained :download:`here parallel2serial.py<../examples/parallel2serial.py>`.
 
 .. only:: latex
 

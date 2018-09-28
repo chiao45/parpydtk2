@@ -17,6 +17,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         int ranks()
         int rank()
         c_comm_t comm()
+        bool created()
         void begin_create() except +
         void create_vset() except +
         void create_vertices(int nv, const double *coords) except +
@@ -25,6 +26,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void extract_gids(int *gids) except +
         void finish_create(bool trivial_gid) except +
         int size()
+        int gsize()
         bool empty()
         bool has_empty()
         const std_vector[int] &_m2s()
@@ -52,12 +54,16 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
 
 
     cdef cppclass Mapper:
+        @staticmethod
+        bool is_dtk2_backend()
         Mapper(
             shared_ptr[IMeshDB] B,
             shared_ptr[IMeshDB] G,
             const std_string &version,
             const std_string &date,
-            bool profiling
+            bool profiling,
+            const std_string &stat_file,
+            bool verbose
         ) except +
         int ranks()
         int rank()
@@ -66,6 +72,7 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void use_mmls()
         void use_spline()
         void use_n2n(bool matching)
+        void use_awls()
         void set_basis(int basis) except +
         void use_knn_b(int knn) except +
         void use_knn_g(int knn) except +
@@ -73,11 +80,19 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void use_radius_g(double r) except +
         int check_method()
         int check_basis()
+        void set_leaf_b(int size) except +
+        void set_leaf_g(int size) except +
+        int leaf_b()
+        int leaf_g()
         int knn_b()
         int knn_g()
         double radius_b()
         double radius_g()
         int dimension()
+        void _set_ind_file(const std_string &fn)
+        void _wipe_ind_file()
+        void set_rho(double rho)
+        double rho()
         shared_ptr[IMeshDB] blue_mesh()
         shared_ptr[IMeshDB] green_mesh()
         void begin_initialization() except +
@@ -96,6 +111,8 @@ cdef extern from 'src/dtk2.hpp' namespace 'parpydtk2' nogil:
         void transfer_data(
             const std_string &bf,
             const std_string &gf,
-            bool direct
+            bool direct,
+            bool resolve_disc,
+            double sigma
         ) except +
         void end_transfer()

@@ -67,6 +67,8 @@ cdef class IMeshDB(object):
         rank of comm
     size : int
         point cloud size, i.e. number of vertices
+    gsize : int
+        global point cloud size
     bbox : np.ndarray
         local bounding box array of shape (2,3)
     gbbox : np.ndarray
@@ -75,7 +77,7 @@ cdef class IMeshDB(object):
 
     def __init__(self, comm=None):
         """Constructor
-        
+
         Parameters
         ----------
         comm : MPI.Comm (optional)
@@ -92,6 +94,16 @@ cdef class IMeshDB(object):
         >>> from mpi4py import MPI
         >>> import parpydtk2 as dtk
         >>> mdb = dtk.IMeshDB(MPI.COMM_WOLRD)
+
+        Notes
+        -----
+
+        Since the mesh database participants appear at least in pairs, a
+        prefered way to construct IMeshDB is to use the wrapper API
+        :py:func:`~parpydtk2.create_imeshdb_pair`, e.g.
+
+        >>> from parpydtk2 import *
+        >>> blue, green = create_imeshdb_pair()
         """
         pass
 
@@ -122,6 +134,16 @@ cdef class IMeshDB(object):
     def rank(self):
         """int: get the rank"""
         return self.mdb.get().rank()
+
+    def created(self):
+        """Check if the mesh database has been created or not
+
+        Returns
+        -------
+        bool
+            ``True`` if :func:`finish_create` has been called
+        """
+        return self.mdb.get().created()
 
     def begin_create(self):
         """Begin to create/manupilate the mesh
@@ -168,9 +190,9 @@ cdef class IMeshDB(object):
 
     def extract_vertices(self):
         """Extract coordinate
-        
+
         .. warning::
-        
+
             This function should be called once you have finished
             :func:`create_vertices`.
 
@@ -208,9 +230,9 @@ cdef class IMeshDB(object):
 
     def extract_gids(self):
         """Extract global IDs/handles
-        
+
         .. warning::
-        
+
             This function should be called once you have finished
             :func:`assign_gids`.
 
@@ -232,7 +254,7 @@ cdef class IMeshDB(object):
         managers happens here.
 
         .. warning::
-        
+
             You must call this function once you have done with manupilating
             the mesh, i.e. vertices and global IDs.
 
@@ -255,6 +277,11 @@ cdef class IMeshDB(object):
         """int: Get the size of a set"""
         return self.mdb.get().size()
 
+    @property
+    def gsize(self):
+        """int: Get the global point cloud size"""
+        return self.mdb.get().gsize()
+
     def empty(self):
         """Check if this is an empty partition"""
         return self.mdb.get().empty()
@@ -273,7 +300,7 @@ cdef class IMeshDB(object):
         .. warning::
 
             Bounding box is valid only after :func:`finish_create`.
-        
+
         See Also
         --------
         :attr:`gbbox`: global bounding box
@@ -286,7 +313,7 @@ cdef class IMeshDB(object):
     @property
     def gbbox(self):
         """np.ndarray: global bounding box
-        
+
         The bounding box is stored simply in a 2x3 array, where the first row
         stores the maximum bounds while minimum bounds for the second row.
 
@@ -325,6 +352,8 @@ cdef class IMeshDB(object):
         >>> from parpydtk2 import *
         >>> mdb1 = IMeshDB()
         >>> mdb1.begin_create()
+        >>> # creating the meshdb
+        >>> mdb1.finish_create()
         >>> mdb1.create_field('heat flux')
         """
         cdef std_string fn = <std_string> field_name.encode('UTF-8')

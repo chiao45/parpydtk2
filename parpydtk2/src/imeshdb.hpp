@@ -45,7 +45,7 @@ namespace parpydtk2 {
 
 /** \addtogroup mesh
  * @{
- */ 
+ */
 
 /// \class IMeshDB
 /// \brief interface mesh database, build on top of MOAB
@@ -145,7 +145,8 @@ class IMeshDB {
         created_(false),
         usergid_(false),
         empty_(false),
-        has_empty_(false) {
+        has_empty_(false),
+        gsize_(0) {
     init_();
     init_bbox_(0);
   }
@@ -166,6 +167,9 @@ class IMeshDB {
 
   /// \name imesh_py_interface
   ///@{
+
+  /// \brief check created mesh database
+  inline bool created() const noexcept { return created_; }
 
   /// \brief begin to create mesh
   inline void begin_create() {
@@ -251,7 +255,7 @@ class IMeshDB {
         handle_moab_error(ret);
       }
     } else {
-      show_warning_if(!usergid_ && (ranks() > 1),
+      show_warning_if(!usergid_ && (ranks() > 1) && locals_[0].size(),
                       "critical!! Global IDs are missing!");
     }
     if (ranks() > 1) {
@@ -295,7 +299,7 @@ class IMeshDB {
           std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                     << ", error_class: " << err_cls << ", msg: " << msg
                     << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                    << __FILE__ << "():" << __LINE__ << '\n';
+                    << __FILE__ << "():" << __LINE__ << std::endl;
           MPI_Abort(MPI_COMM_WORLD, ret);
         }
         // check if "my" mesh is empty
@@ -323,7 +327,7 @@ class IMeshDB {
           std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                     << ", error_class: " << err_cls << ", msg: " << msg
                     << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                    << __FILE__ << "():" << __LINE__ << '\n';
+                    << __FILE__ << "():" << __LINE__ << std::endl;
           MPI_Abort(MPI_COMM_WORLD, ret);
         }
         int counts = std::count(empty_flags.cbegin(), empty_flags.cend(), 1);
@@ -345,28 +349,55 @@ class IMeshDB {
       handle_moab_error(ret);
     }
 
+    // communicate global sizes
+    if (ranks() > 1) {
+      std::vector<int> gsizes(ranks());
+      std::vector<int> gids(locals_[0].size());
+      extract_gids(gids.data());
+      int gmax = *std::max_element(gids.cbegin(), gids.cend());
+      int ret =
+          MPI_Allgather(&gmax, 1, MPI_INT, gsizes.data(), 1, MPI_INT, comm());
+      if (ret != MPI_SUCCESS) {
+        // NOTE that the default handler in mpi will directly abort, as a
+        // mapper we will not modify the mpi handler (this should be the task
+        // of application codes)
+        char msg[MPI_MAX_ERROR_STRING];
+        int dummy, err_cls;
+        MPI_Error_string(ret, msg, &dummy);
+        MPI_Error_class(ret, &err_cls);
+        std::cerr << "FATAL ERROR! MPI failed with code: " << ret
+                  << ", error_class: " << err_cls << ", msg: " << msg
+                  << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
+                  << __FILE__ << "():" << __LINE__ << std::endl;
+        MPI_Abort(MPI_COMM_WORLD, ret);
+      }
+      gsize_ = *std::max_element(gsizes.cbegin(), gsizes.cend());
+    } else
+      gsize_ = locals_[0].size();
+
     // assign some values ot fields
-    std::vector<double> values;
-    int dim = 1;
-    for (const auto &field : fields_) dim = std::max(dim, field.second->dim());
-    for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
-      values.resize(size() * dim, 0.0);
-      for (auto &field : fields_)
-        field.second->assign(locals_[set_id], values.data());
-    }
+    // std::vector<double> values;
+    // int dim = 1;
+    // for (const auto &field : fields_) dim = std::max(dim,
+    // field.second->dim()); for (unsigned set_id = 0u; set_id < vsets_.size();
+    // ++set_id) {
+    //   values.resize(size() * dim, 0.0);
+    //   for (auto &field : fields_)
+    //     field.second->assign(locals_[set_id], values.data());
+    // }
 
     // set up moab manager
     for (unsigned set_id = 0u; set_id < vsets_.size(); ++set_id) {
       mngrs_.emplace_back(par_, vsets_[set_id], false);
     }
-    for (const auto &field : fields_) {
-      const std::string &name = *field.second;
-      const ::moab::Tag &tag = field.second->tag();
-      int set_id = field.second->set();
-      dtkfields_.emplace(std::make_pair(
-          name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
-                                           vsets_[set_id], tag))));
-    }
+    // for (const auto &field : fields_) {
+    //   const std::string &name = *field.second;
+    //   const ::moab::Tag &tag = field.second->tag();
+    //   int set_id = field.second->set();
+    //   dtkfields_.emplace(std::make_pair(
+    //       name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
+    //                                        vsets_[set_id], tag))));
+    // }
 
     // compute bboxes
     cmpt_bboxes_();
@@ -406,7 +437,7 @@ class IMeshDB {
         std::cerr << "FATAL ERROR! MPI failed with code: " << ret
                   << ", error_class: " << err_cls << ", msg: " << msg
                   << ", rank: " << rank() << ", in " << __FUNCTION__ << " at "
-                  << __FILE__ << "():" << __LINE__ << '\n';
+                  << __FILE__ << "():" << __LINE__ << std::endl;
         MPI_Abort(MPI_COMM_WORLD, ret);
       }
 
@@ -437,6 +468,9 @@ class IMeshDB {
   /// \brief check mesh size
   inline int size() const noexcept { return locals_[0].size(); }
 
+  /// \brief check the global mesh size
+  inline int gsize() const noexcept { return gsize_; }
+
   /// \brief get bounding box
   /// \param[out] v values
   inline void get_bbox(double *v) const noexcept {
@@ -457,9 +491,25 @@ class IMeshDB {
   inline void create_field(const std::string &field_name, int dim = 1) {
     throw_error_if(dim < 1, "invalid field dimension");
     throw_error_if(
-        created_,
-        "you cannot create fields once an IMeshDB is marked as created!");
+        !created_,
+        "you can only create fields once an IMeshDB is marked as created!");
+    if (has_field(field_name)) {
+      show_warning("field: " + field_name + " already exists");
+      return;
+    }
+    // create parpydtk2 field
     fields_.create(mdb_, field_name, dim);
+    auto &field = fields_[field_name];
+    const std::string &name = field;
+    const ::moab::Tag &tag = field.tag();
+    int set_id = field.set();
+    // create dtk2 field
+    dtkfields_.emplace(std::make_pair(
+        name, std::make_pair(set_id, mngrs_[set_id].createFieldMultiVector(
+                                         vsets_[set_id], tag))));
+    // initialize values to zero
+    std::vector<double> values(locals_[set_id].size() * dim, 0.0);
+    field.assign(locals_[set_id], values.data());
   }
 
   /// \brief check if we have a field
@@ -592,6 +642,9 @@ class IMeshDB {
 
   /// \brief comm pattern for master2slaves for handling empty partitions
   std::vector<int> m2s_;
+
+  /// \brief global size
+  int gsize_;
 
  public:
   /// \brief get the dtk fields

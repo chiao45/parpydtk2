@@ -19,6 +19,8 @@ This package provides a Python3 interface of using
 `MOAB <http://sigma.mcs.anl.gov/moab-library/>`_ in parallel with MPI for
 multi-physics coupling problems.
 
+The logo is created with `<https://sketch.io/sketchpad/>`_.
+
 Documentation
 -------------
 

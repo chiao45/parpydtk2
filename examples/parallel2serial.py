@@ -15,8 +15,7 @@ comm = MPI.COMM_WORLD
 # NOTE implementation should be within a try ... except
 try:
     # create our blue and green mesh databases
-    blue = IMeshDB(comm)
-    green = IMeshDB(comm)
+    blue, green = create_imeshdb_pair(comm)
     assert comm.size == 2
     rank = comm.rank
 
@@ -71,10 +70,10 @@ try:
     lbgids = bgids[8 * rank:8 * (rank + 1)].copy()
     blue.create_vertices(lcob)
     blue.assign_gids(lbgids)
-    blue.create_field('b')
-
     # do not use trivial global ID strategy
     blue.finish_create(False)
+    # NOTE fields must be created after the mesh has been settled
+    blue.create_field('b')
 
     ###########################
     # Build green mesh database
@@ -86,9 +85,10 @@ try:
     # only create on master rank
     if not rank:
         green.create_vertices(cog)
-    green.create_field('g')
     # since green is serial, we just use the trivial global IDs
     green.finish_create()  # empty partition is resolve here
+    # NOTE fields must be created after the mesh has been settled
+    green.create_field('g')
 
     assert green.has_empty()
 
@@ -136,9 +136,11 @@ try:
 
     comm.barrier()
 
-    print(rank, 'blue L2-error=%.3e' % (np.linalg.norm(err_b)/np.sqrt(err_b.size)))
+    print(rank, 'blue L2-error=%.3e' %
+          (np.linalg.norm(err_b)/np.sqrt(err_b.size)))
     if rank == 0:
-        print(0, 'green L2-error=%.3e' % (np.linalg.norm(err_g)/np.sqrt(err_g.size)))
+        print(0, 'green L2-error=%.3e' %
+              (np.linalg.norm(err_g)/np.sqrt(err_g.size)))
 except Exception:
     # if something goes wrong, set the error code and raise again
     error.ERROR_CODE = 1

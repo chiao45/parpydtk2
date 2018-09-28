@@ -16,12 +16,21 @@ solvers boundary conditions, a robust and accurate interface solution
 remapping operator is needed. The solution transfer problem on its own is not
 an easy task, since it involves the following research aspects:
 
-1. **numerical method**, i.e. consistent, conservative, high-order convergence.
-2. **geometry and data structure**, i.e. efficient and robust treatments of
+1.
+
+    **numerical method**, i.e. consistent, conservative, high-order
+    convergence.
+
+2.
+
+    **geometry and data structure**, i.e. efficient and robust treatments of
     `mesh association` of two (potentially more) general surfaces that come
     from different discretization methods (`FEM`, `FVM`, `FDM`, etc.) thus
     having different resolutions.
-3. **parallel rendezvous & HPC**, i.e. handling migrating meshes that have
+
+3.
+
+    **parallel rendezvous & HPC**, i.e. handling migrating meshes that have
     different parallel partitions.
 
 `Data Transfer Kit-2.0`_ (DTK2) is a package that is developed at the
