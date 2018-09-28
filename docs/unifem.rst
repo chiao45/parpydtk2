@@ -435,6 +435,12 @@ the convergence rate is greater than :math:`(p+1)`-st order.
     and the corresponding grids are stored in compressed ``npz`` file that can
     be downloaded :download:`here<../examples/torus.npz>`.
 
+.. only:: latex
+
+    The torus program script can be obtained `here <https://raw.githubusercontent.com/chiao45/parpydtk2/parallel/examples/awls.py>`_,
+    and the corresponding grids are stored in compressed ``npz`` file that can
+    be obtained `here <https://github.com/chiao45/parpydtk2/raw/parallel/examples/torus.npz>`_.
+
 Since the spherical surface is really special due to its smoothness and
 symmetry, an almost-:math:`(p+2)`-nd order super-convergence can be obtained
 with large stencils and :py:attr:`~parpydtk2.WU2` weighting schemes. The
@@ -450,6 +456,10 @@ matter of fact, we didn't observe this with the torus setting.
 .. only:: html
 
     You can obtain the test grids in VTK :download:`hear<../examples/test_grids.tar.xz>`.
+
+.. only:: latex
+
+    You can obtain the test grids in VTK `here <https://github.com/chiao45/parpydtk2/raw/parallel/examples/test_grids.tar.xz>`_.
 
 Non-smooth Functions
 ++++++++++++++++++++
