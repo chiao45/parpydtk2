@@ -618,7 +618,8 @@ class Mapper {
     //                    factory_.create(src.second->getMap(),
     //                                    tgt.second->getMap(),
     //                                    *opts_[direct])));
-    auto build = optr.insert(std::make_pair(std::make_pair(bf, gf), nullptr));
+    auto build = optr.insert(
+        std::make_pair(std::make_pair(bf, gf), Teuchos::ENull::null));
     if (!build.second) {
       show_warning(bf + "+" + gf + " already exists, ignoring request");
       return;
